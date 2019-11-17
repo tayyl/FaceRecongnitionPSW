@@ -45,7 +45,7 @@ namespace FaceRecongnition
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             capture = new VideoCapture();
-            haarCascade = new CascadeClassifier("haarcascade_frontalface_default.xml");       
+            haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");       
             ComponentDispatcher.ThreadIdle += ProcessFrame;
             
         }
