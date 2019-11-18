@@ -28,6 +28,11 @@ namespace FaceRecongnition
     {
         private VideoCapture capture;
         private CascadeClassifier haarCascade;
+
+        Image<Gray, Byte> grayFrame;
+        System.Drawing.Rectangle[] detectedFaces;
+
+        Image<Bgr, Byte> currentFrame;
         public MainWindow()
         {
             InitializeComponent();
@@ -38,43 +43,32 @@ namespace FaceRecongnition
             ComponentDispatcher.ThreadIdle += ProcessFrame;
         }
 
-        private void Capture_ImageGrabbed(object sender, EventArgs e)
-        {
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             capture = new VideoCapture();
-            haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");       
+            haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");
             ComponentDispatcher.ThreadIdle += ProcessFrame;
-            
-        }
-        void timer_Tick(object sender, EventArgs e)
-        {
 
         }
 
         private void ProcessFrame(object sender, EventArgs arg)
         {
-            Image<Bgr, Byte> currentFrame = capture.QueryFrame().ToImage<Bgr, byte>();
+            currentFrame = capture.QueryFrame().ToImage<Bgr, byte>();
 
-            if (currentFrame != null)
-            {
-                Image<Gray, Byte> grayFrame = currentFrame.Convert<Gray, Byte>();
+            grayFrame = currentFrame.Convert<Gray, Byte>();
+            detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.4, minSize: new System.Drawing.Size(30, 30));
 
-                System.Drawing.Rectangle[] detectedFaces = haarCascade.DetectMultiScale(grayFrame);
+            Parallel.ForEach(detectedFaces, face => {
+                currentFrame.Draw(face, new Bgr(0, double.MaxValue, 0), 3);
+            });
 
-                foreach (var face in detectedFaces)
-                    currentFrame.Draw(face, new Bgr(0, double.MaxValue, 0), 3);
+            imageBox1.Source = ToBitmapSource(currentFrame);
 
-                imageBox1.Source = ToBitmapSource(currentFrame);
-
-            }
         }
         [DllImport("gdi32")]
         private static extern int DeleteObject(IntPtr o);
-        
-        public static BitmapSource ToBitmapSource(Emgu.CV.Image<Bgr,byte> image)
+
+        public static BitmapSource ToBitmapSource(Emgu.CV.Image<Bgr, byte> image)
         {
             using (System.Drawing.Bitmap source = image.Bitmap)
             {
@@ -92,14 +86,15 @@ namespace FaceRecongnition
             }
         }
 
-        private void Grid_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             ComponentDispatcher.ThreadIdle -= ProcessFrame;
+        }
+
+        private void Grid_Loaded(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
