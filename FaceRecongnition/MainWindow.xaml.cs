@@ -56,10 +56,10 @@ namespace FaceRecongnition
             currentFrame = capture.QueryFrame().ToImage<Bgr, byte>();
 
             grayFrame = currentFrame.Convert<Gray, Byte>();
-            detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.4, minSize: new System.Drawing.Size(30, 30));
+            detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.2, minSize: new System.Drawing.Size(30, 30));
 
             Parallel.ForEach(detectedFaces, face => {
-                currentFrame.Draw(face, new Bgr(0, double.MaxValue, 0), 3);
+                currentFrame.Draw(face, new Bgr(0, 255, 0), 3);
             });
 
             imageBox1.Source = ToBitmapSource(currentFrame);
