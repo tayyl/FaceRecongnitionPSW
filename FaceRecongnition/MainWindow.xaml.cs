@@ -38,17 +38,12 @@ namespace FaceRecongnition
             InitializeComponent();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            ComponentDispatcher.ThreadIdle += ProcessFrame;
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             capture = new VideoCapture();
             haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");
             ComponentDispatcher.ThreadIdle += ProcessFrame;
-
+          
         }
 
         private void ProcessFrame(object sender, EventArgs arg)
@@ -58,8 +53,14 @@ namespace FaceRecongnition
             grayFrame = currentFrame.Convert<Gray, Byte>();
             detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.2, minSize: new System.Drawing.Size(30, 30));
 
-            Parallel.ForEach(detectedFaces, face => {
-                currentFrame.Draw(face, new Bgr(0, 255, 0), 3);
+            Parallel.For(0,detectedFaces.Length, i => {
+                //cropping face frame, to draw only face not whole head
+                detectedFaces[i].X += (int)(detectedFaces[i].Height * 0.15);
+                detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.22);
+                detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.3);
+                detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
+
+                currentFrame.Draw(detectedFaces[i], new Bgr(0, 255, 0), 3);
             });
 
             imageBox1.Source = ToBitmapSource(currentFrame);
@@ -87,14 +88,5 @@ namespace FaceRecongnition
         }
 
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            ComponentDispatcher.ThreadIdle -= ProcessFrame;
-        }
-
-        private void Grid_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
