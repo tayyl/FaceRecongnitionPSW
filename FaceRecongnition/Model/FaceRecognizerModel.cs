@@ -48,7 +48,7 @@ namespace FaceRecognition.Model
         {
             videoCapture = new VideoCapture();
 
-            ComponentDispatcher.ThreadIdle += ProcessFrame; //working in thread to increase performance
+            //working in thread to increase performance
            // if (videoCapture != null) videoCapture.Dispose();
         }
         /// <summary>

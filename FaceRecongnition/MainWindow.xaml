@@ -5,11 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FaceRecognition"
         xmlns:vm="clr-namespace:FaceRecognition.ViewModel"
+        xmlns:conv="clr-namespace:FaceRecognition.Converters"
         mc:Ignorable="d"
         Title="MainWindow" Height="500" Width="900" Loaded="Window_Loaded">
     <Window.DataContext>
         <vm:FaceRecognizerVM  />
     </Window.DataContext>
+    <Window.Resources>
+        <conv:ToBitmapSourceConverter x:Key="ToBitmapSourceConverter"/>
+    </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
@@ -19,7 +23,7 @@
             </MenuItem>
         </Menu>
         <Grid>
-            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Mode=OneWay}" HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="658"/>
+            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="658"/>
             <StackPanel HorizontalAlignment="Left" Height="421" Margin="691,10,0,0" VerticalAlignment="Top" Width="191"/>
 
         </Grid>

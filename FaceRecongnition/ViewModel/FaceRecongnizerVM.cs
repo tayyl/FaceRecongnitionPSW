@@ -25,11 +25,11 @@ namespace FaceRecognition.ViewModel
     public class FaceRecognizerVM 
     {
         FaceRecognizerModel faceRecognizer = new FaceRecognizerModel();
-        public BitmapSource MainCamera
+        public Image<Bgr, byte> MainCamera
         {
             get
             {
-                return ToBitmapSource(faceRecognizer.ProcessedFrame);
+                return faceRecognizer.ProcessedFrame;
             }
         }
        
@@ -37,8 +37,9 @@ namespace FaceRecognition.ViewModel
         public FaceRecognizerVM()
         {
             faceRecognizer.StartCapturing();
+            ComponentDispatcher.ThreadIdle += faceRecognizer.ProcessFrame;
         }
-
+        /*
         [DllImport("gdi32")]
         private static extern int DeleteObject(IntPtr o);
         /// <summary>
@@ -62,6 +63,6 @@ namespace FaceRecognition.ViewModel
                 DeleteObject(ptr); //release the HBitmap  
                 return bs;
             }
-        }
+        }*/
     }
 }
