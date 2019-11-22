@@ -23,7 +23,7 @@
             </MenuItem>
         </Menu>
         <Grid>
-            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}" HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="658"/>
+            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="658"/>
             <StackPanel HorizontalAlignment="Left" Height="421" Margin="691,10,0,0" VerticalAlignment="Top" Width="191"/>
 
         </Grid>

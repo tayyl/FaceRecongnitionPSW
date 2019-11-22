@@ -22,47 +22,43 @@ using FaceRecognition.Model;
 using System.ComponentModel;
 namespace FaceRecognition.ViewModel
 {
-    public class FaceRecognizerVM 
+    public class FaceRecognizerVM  : INotifyPropertyChanged
     {
-        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel();
-        public Image<Bgr, byte> MainCamera
+        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
+        VideoCapture videoCapture = new VideoCapture();
+       
+        Image<Bgr, byte> mainCamera;
+        public Image<Bgr,byte> MainCamera
         {
             get
             {
-                return faceRecognizer.ProcessedFrame;
+                return mainCamera;
+            }
+            set
+            {
+                mainCamera = value;
+                NotifyPropertyChanged(nameof(MainCamera));
             }
         }
        
 
         public FaceRecognizerVM()
         {
-            faceRecognizer.StartCapturing();
-            ComponentDispatcher.ThreadIdle += faceRecognizer.ProcessFrame;
+
+            MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+
+            //puting into thread for better performance
+            ComponentDispatcher.ThreadIdle += (object sender, EventArgs e) => {
+                MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+            };
         }
-        /*
-        [DllImport("gdi32")]
-        private static extern int DeleteObject(IntPtr o);
-        /// <summary>
-        /// Convert to ImageBox format
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        public static BitmapSource ToBitmapSource(Emgu.CV.Image<Bgr, byte> image)
+        #region Events
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void NotifyPropertyChanged(string propertyName = null)
         {
-            using (System.Drawing.Bitmap source = image.Bitmap)
-            {
-                IntPtr ptr = source.GetHbitmap(); //obtain the Hbitmap  
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
 
-                BitmapSource bs = System.Windows.Interop
-                  .Imaging.CreateBitmapSourceFromHBitmap(
-                  ptr,
-                  IntPtr.Zero,
-                  Int32Rect.Empty,
-                  System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-
-                DeleteObject(ptr); //release the HBitmap  
-                return bs;
-            }
-        }*/
     }
 }

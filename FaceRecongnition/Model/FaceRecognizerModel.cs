@@ -21,46 +21,30 @@ using Emgu.CV.UI;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
+using System.ComponentModel;
+
 namespace FaceRecognition.Model
 {
-    public class FaceRecognizerModel
+    public class FaceRecognizerModel 
     {
+       
         #region Variables
         Image<Bgr, Byte> currentFrame; 
-        Image<Gray, byte> grayFrame = null; 
-
-        VideoCapture videoCapture; 
-
-        public CascadeClassifier Face = new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + "..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
+        Image<Gray, byte> grayFrame = null;
+        CascadeClassifier Face;
         #endregion
 
-        #region Properties
-        private Image<Bgr, byte> processedFrame;
-        public Image<Bgr,byte> ProcessedFrame => processedFrame;
-        #endregion
-
-        #region Public Methods
-        //maybe change later to give user choice of camera
-        /// <summary>
-        /// Start capturing video from default webcam
-        /// </summary>
-        public void StartCapturing()
+        public FaceRecognizerModel(string cascadeCalssifierPath)
         {
-            videoCapture = new VideoCapture();
-
-            //working in thread to increase performance
-           // if (videoCapture != null) videoCapture.Dispose();
+            Face= new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
         }
-        /// <summary>
-        /// Parallel processing current frame
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void ProcessFrame(object sender, EventArgs e)
+       
+        public Image<Bgr,byte> ProcessFrame(Image<Bgr, byte> videoCapture)
         {
-            currentFrame = videoCapture.QueryFrame().ToImage<Bgr, byte>();
+            currentFrame = videoCapture;
             currentFrame.Resize(320, 240, Inter.Cubic); //resizing so can work with smaller picture for better performance
 
+            grayFrame = currentFrame.Convert<Gray, Byte>();
             System.Drawing.Rectangle[] detectedFaces = Face.DetectMultiScale(grayFrame, 1.2, 10, new System.Drawing.Size(50, 50), System.Drawing.Size.Empty);//found parameters for good performance and quality
             //parallel.For = better performance; processing every face in thread
             Parallel.For(0, detectedFaces.Length, i =>
@@ -69,12 +53,12 @@ namespace FaceRecognition.Model
                 {
                     //cropping image to have only face, not whole head
                     detectedFaces[i].X += (int)(detectedFaces[i].Height * 0.15);
-                    detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.22);
-                    detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.3);
+                    detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.20);
+                    detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
 
                     //draw the red frame around face which has been detected in the 0th (gray) 
-                    currentFrame.Draw(detectedFaces[i], new Bgr(255,0,0), 2);
+                    currentFrame.Draw(detectedFaces[i], new Bgr(0,0,255), 2);
 
                 }
                 catch
@@ -82,9 +66,8 @@ namespace FaceRecognition.Model
                     //if got some error just skip it
                 }
             });
-            processedFrame = currentFrame;
+            return currentFrame;
         }
-        #endregion
 
         #region Private Methods
         #endregion

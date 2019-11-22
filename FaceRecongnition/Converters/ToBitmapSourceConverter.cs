@@ -14,7 +14,8 @@ namespace FaceRecognition.Converters
 {
     public class ToBitmapSourceConverter : IValueConverter
     {
-       // [DllImport("gdi32")]
+        [DllImport("gdi32")]
+        private static extern int DeleteObject(IntPtr o);
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             Emgu.CV.Image<Bgr, byte> myValue=(Emgu.CV.Image<Bgr, byte>)value;
@@ -32,11 +33,6 @@ namespace FaceRecognition.Converters
                 DeleteObject(ptr); //release the HBitmap  
                 return bs;
             }
-        }
-
-        private void DeleteObject(IntPtr ptr)
-        {
-            throw new NotImplementedException();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
