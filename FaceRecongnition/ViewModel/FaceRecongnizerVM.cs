@@ -18,51 +18,34 @@ using Emgu.CV;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Interop;
-
-namespace FaceRecognition
+using FaceRecognition.Model;
+using System.ComponentModel;
+namespace FaceRecognition.ViewModel
 {
-    /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public class FaceRecognizerVM 
     {
-        private VideoCapture capture;
-        private CascadeClassifier haarCascade;
-
-        Image<Gray, Byte> grayFrame;
-        System.Drawing.Rectangle[] detectedFaces;
-
-        Image<Bgr, Byte> currentFrame;
-        public MainWindow()
+        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel();
+        public BitmapSource MainCamera
         {
-            InitializeComponent();
+            get
+            {
+                return ToBitmapSource(faceRecognizer.ProcessedFrame);
+            }
         }
-        
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-          /*  capture = new VideoCapture();
-            haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");
-            ComponentDispatcher.ThreadIdle += ProcessFrame;*/
+       
 
+        public FaceRecognizerVM()
+        {
+            faceRecognizer.StartCapturing();
         }
 
-        private void ProcessFrame(object sender, EventArgs arg)
-        {
-            currentFrame = capture.QueryFrame().ToImage<Bgr, byte>();
-
-            grayFrame = currentFrame.Convert<Gray, Byte>();
-            detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.2, minSize: new System.Drawing.Size(30, 30));
-
-            Parallel.ForEach(detectedFaces, face => {
-                currentFrame.Draw(face, new Bgr(0, 255, 0), 3);
-            });
-
-            MainWindowCamera.Source = ToBitmapSource(currentFrame);
-
-        }
         [DllImport("gdi32")]
         private static extern int DeleteObject(IntPtr o);
-
+        /// <summary>
+        /// Convert to ImageBox format
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
         public static BitmapSource ToBitmapSource(Emgu.CV.Image<Bgr, byte> image)
         {
             using (System.Drawing.Bitmap source = image.Bitmap)
@@ -80,6 +63,5 @@ namespace FaceRecognition
                 return bs;
             }
         }
-
     }
 }
