@@ -26,13 +26,6 @@ namespace FaceRecognition
     /// </summary>
     public partial class MainWindow : Window
     {
-        private VideoCapture capture;
-        private CascadeClassifier haarCascade;
-
-        Image<Gray, Byte> grayFrame;
-        System.Drawing.Rectangle[] detectedFaces;
-
-        Image<Bgr, Byte> currentFrame;
         public MainWindow()
         {
             InitializeComponent();
@@ -40,46 +33,9 @@ namespace FaceRecognition
         
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-          /*  capture = new VideoCapture();
-            haarCascade = new CascadeClassifier("..\\..\\..\\haarcascade_frontalface_default.xml");
-            ComponentDispatcher.ThreadIdle += ProcessFrame;*/
 
         }
 
-        private void ProcessFrame(object sender, EventArgs arg)
-        {
-            currentFrame = capture.QueryFrame().ToImage<Bgr, byte>();
-
-            grayFrame = currentFrame.Convert<Gray, Byte>();
-            detectedFaces = haarCascade.DetectMultiScale(grayFrame, 1.2, minSize: new System.Drawing.Size(30, 30));
-
-            Parallel.ForEach(detectedFaces, face => {
-                currentFrame.Draw(face, new Bgr(0, 255, 0), 3);
-            });
-
-            MainWindowCamera.Source = ToBitmapSource(currentFrame);
-
-        }
-        [DllImport("gdi32")]
-        private static extern int DeleteObject(IntPtr o);
-
-        public static BitmapSource ToBitmapSource(Emgu.CV.Image<Bgr, byte> image)
-        {
-            using (System.Drawing.Bitmap source = image.Bitmap)
-            {
-                IntPtr ptr = source.GetHbitmap(); //obtain the Hbitmap  
-
-                BitmapSource bs = System.Windows.Interop
-                  .Imaging.CreateBitmapSourceFromHBitmap(
-                  ptr,
-                  IntPtr.Zero,
-                  Int32Rect.Empty,
-                  System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-
-                DeleteObject(ptr); //release the HBitmap  
-                return bs;
-            }
-        }
 
     }
 }
