@@ -21,6 +21,7 @@ using Emgu.CV.UI;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Face;
 using System.ComponentModel;
 
 namespace FaceRecognition.Model
@@ -30,8 +31,9 @@ namespace FaceRecognition.Model
        
         #region Variables
         Image<Bgr, Byte> currentFrame; 
-        Image<Gray, byte> grayFrame = null;
+        Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
+        
         #endregion
 
         public FaceRecognizerModel(string cascadeCalssifierPath)
@@ -69,7 +71,5 @@ namespace FaceRecognition.Model
             return currentFrame;
         }
 
-        #region Private Methods
-        #endregion
     }
 }

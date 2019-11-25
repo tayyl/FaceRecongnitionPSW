@@ -18,13 +18,29 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open"/>
-                <MenuItem Header="_Close"/>
                 <MenuItem Header="_Save"/>
+                <MenuItem Header="_Exit"/>
             </MenuItem>
+            <MenuItem Header="_Train">
+            </MenuItem>
+            <MenuItem Header="_Options"></MenuItem>
         </Menu>
         <Grid>
-            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="658"/>
-            <StackPanel HorizontalAlignment="Left" Height="421" Margin="691,10,0,0" VerticalAlignment="Top" Width="191"/>
+            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="554"/>
+            <TabControl HorizontalAlignment="Left" Height="421" VerticalAlignment="Top" Width="294" Margin="578,10,10,10">
+                <TabItem Header="Main">
+                    <Grid Background="#FFE5E5E5"/>
+                </TabItem>
+                <TabItem Header="Train">
+                    <Grid  Background="#FFE5E5E5">
+                        <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom"/>
+                        <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160"/>
+                        <Button Content="ADD 10 IMAGES" Width="90" Height="20" Margin="45,213,153,160"/>
+                        <Label Content="Name" Width="70" Margin="45,251,173,121" Padding="0"/>
+                        <TextBox Width="200" Height="20" Margin="45,272,43,101"/>
+                    </Grid>
+                </TabItem>
+            </TabControl>
 
         </Grid>
     </DockPanel>
