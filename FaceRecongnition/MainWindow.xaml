@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FaceRecognition"
+        xmlns:attbeh="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
         xmlns:vm="clr-namespace:FaceRecognition.ViewModel"
         xmlns:conv="clr-namespace:FaceRecognition.Converters"
         mc:Ignorable="d"
@@ -19,7 +20,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Open"/>
                 <MenuItem Header="_Save"/>
-                <MenuItem Header="_Exit"/>
+                <MenuItem Header="_Exit" />
             </MenuItem>
             <MenuItem Header="_Train">
             </MenuItem>
@@ -27,12 +28,16 @@
         </Menu>
         <Grid>
             <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="554"/>
-            <TabControl HorizontalAlignment="Left" Height="421" VerticalAlignment="Top" Width="294" Margin="578,10,10,10">
-                <TabItem Header="Main">
+            <TabControl HorizontalAlignment="Left" Height="421" VerticalAlignment="Top" Width="294" Margin="578,10,10,10" 
+                      attbeh:CommandBehavior.Event="SelectionChanged"                         
+                        attbeh:CommandBehavior.Command="{Binding MainSelectorChangedCommand}" 
+                       >
+                        
+                <TabItem Header="Main" >
                     <Grid Background="#FFE5E5E5"/>
                 </TabItem>
-                <TabItem Header="Train">
-                    <Grid  Background="#FFE5E5E5">
+                <TabItem Header="Train" >
+                    <Grid  Background="#FFE5E5E5" >
                         <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom"/>
                         <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160"/>
                         <Button Content="ADD 10 IMAGES" Width="90" Height="20" Margin="45,213,153,160"/>

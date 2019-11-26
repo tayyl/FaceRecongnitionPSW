@@ -24,9 +24,12 @@ namespace FaceRecognition.ViewModel
 {
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
+        #region Variables
         FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
         VideoCapture videoCapture = new VideoCapture();
-       
+        #endregion
+
+        #region Attributes
         Image<Bgr, byte> mainCamera;
         public Image<Bgr,byte> MainCamera
         {
@@ -40,7 +43,34 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(MainCamera));
             }
         }
-       
+        string labelUnderCamera;
+        public string LabelUnderCamera
+        {
+            get
+            {
+                return labelUnderCamera;
+            }
+            set
+            {
+                labelUnderCamera = value;
+                NotifyPropertyChanged(nameof(LabelUnderCamera));
+            }
+        }
+        
+        static int i = 0;
+        SimpleCommand mainSelectorChangedCommand = new SimpleCommand
+        {
+            CanExecuteDelegate = x => true,
+            ExecuteDelegate = x => i++
+        };
+        public ICommand MainSelectorChangedCommand
+        {
+            get
+            {
+                return mainSelectorChangedCommand;
+            }
+        }
+        #endregion
 
         public FaceRecognizerVM()
         {
