@@ -57,12 +57,8 @@ namespace FaceRecognition.ViewModel
             }
         }
         
-        static int i = 0;
-        SimpleCommand mainSelectorChangedCommand = new SimpleCommand
-        {
-            CanExecuteDelegate = x => true,
-            ExecuteDelegate = x => i++
-        };
+        int i = 0;
+        SimpleCommand mainSelectorChangedCommand;
         public ICommand MainSelectorChangedCommand
         {
             get
@@ -71,9 +67,13 @@ namespace FaceRecognition.ViewModel
             }
         }
         #endregion
-
         public FaceRecognizerVM()
         {
+            mainSelectorChangedCommand = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x => LabelUnderCamera = "Event test: "+i++
+           };
 
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
 

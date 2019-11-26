@@ -46,6 +46,7 @@
                     </Grid>
                 </TabItem>
             </TabControl>
+            <Label Content="{Binding LabelUnderCamera}" HorizontalAlignment="Left" Margin="23,425,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.364,3.027" Width="76"/>
 
         </Grid>
     </DockPanel>

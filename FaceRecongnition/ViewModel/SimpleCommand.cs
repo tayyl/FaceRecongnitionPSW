@@ -13,7 +13,7 @@ namespace FaceRecognition.ViewModel
     {
         public Predicate<object> CanExecuteDelegate { get; set; }
         public Action<object> ExecuteDelegate { get; set; }
-
+      
         public event EventHandler CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
