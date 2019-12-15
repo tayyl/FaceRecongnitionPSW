@@ -43,6 +43,19 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(MainCamera));
             }
         }
+        Image<Gray, byte> croppedFace;
+        public Image<Gray, byte> CroppedFace
+        {
+            get
+            {
+                return croppedFace;
+            }
+            set
+            {
+                croppedFace = value;
+                NotifyPropertyChanged(nameof(CroppedFace));
+            }
+        }
         string labelUnderCamera;
         public string LabelUnderCamera
         {
@@ -72,20 +85,22 @@ namespace FaceRecognition.ViewModel
             mainSelectorChangedCommand = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
-                ExecuteDelegate = x => LabelUnderCamera = "Event test: "+i++
-           };
+                ExecuteDelegate = x => faceRecognizer.Train = faceRecognizer.Train ? false:true
+            };
 
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
-
+            CroppedFace = faceRecognizer.CroppedFace;
             //puting into thread for better performance
             ComponentDispatcher.ThreadIdle += (object sender, EventArgs e) => {
                 MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+                CroppedFace = faceRecognizer.CroppedFace;
             };
         }
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
         protected void NotifyPropertyChanged(string propertyName = null)
         {
+            
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion

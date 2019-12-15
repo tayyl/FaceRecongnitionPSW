@@ -13,7 +13,8 @@
         <vm:FaceRecognizerVM  />
     </Window.DataContext>
     <Window.Resources>
-        <conv:ToBitmapSourceConverter x:Key="ToBitmapSourceConverter"/>
+        <conv:ToBitmapBGRSourceConverter x:Key="ToBitmapBGRSourceConverter"/>
+        <conv:ToBitmapGraySourceConverter x:Key="ToBitmapGraySourceConverter"/>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -27,7 +28,7 @@
             <MenuItem Header="_Options"></MenuItem>
         </Menu>
         <Grid>
-            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="554"/>
+            <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapBGRSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="554"/>
             <TabControl HorizontalAlignment="Left" Height="421" VerticalAlignment="Top" Width="294" Margin="578,10,10,10" 
                       attbeh:CommandBehavior.Event="SelectionChanged"                         
                         attbeh:CommandBehavior.Command="{Binding MainSelectorChangedCommand}" 
@@ -38,7 +39,7 @@
                 </TabItem>
                 <TabItem Header="Train" >
                     <Grid  Background="#FFE5E5E5" >
-                        <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom"/>
+                        <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom" Source="{Binding CroppedFace, Converter={StaticResource ToBitmapGraySourceConverter}}"/>
                         <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160"/>
                         <Button Content="ADD 10 IMAGES" Width="90" Height="20" Margin="45,213,153,160"/>
                         <Label Content="Name" Width="70" Margin="45,251,173,121" Padding="0"/>

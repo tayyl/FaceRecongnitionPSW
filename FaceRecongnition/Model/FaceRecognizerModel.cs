@@ -28,7 +28,10 @@ namespace FaceRecognition.Model
 {
     public class FaceRecognizerModel 
     {
-       
+        #region Attributes
+        public bool Train { get; set; } = true;
+        public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
+        #endregion
         #region Variables
         Image<Bgr, Byte> currentFrame; 
         Image<Gray, byte> grayFrame;
@@ -51,8 +54,6 @@ namespace FaceRecognition.Model
             //parallel.For = better performance; processing every face in thread
             Parallel.For(0, detectedFaces.Length, i =>
             {
-                try
-                {
                     //cropping image to have only face, not whole head
                     detectedFaces[i].X += (int)(detectedFaces[i].Height * 0.15);
                     detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.20);
@@ -60,13 +61,12 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
 
                     //draw the red frame around face which has been detected in the 0th (gray) 
-                    currentFrame.Draw(detectedFaces[i], new Bgr(0,0,255), 2);
-
-                }
-                catch
+                if (Train)
                 {
-                    //if got some error just skip it
+                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                    CroppedFace._EqualizeHist();
                 }
+                currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             return currentFrame;
         }
