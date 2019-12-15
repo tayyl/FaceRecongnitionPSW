@@ -23,6 +23,9 @@ using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Face;
 using System.ComponentModel;
+using System.IO;
+using System.Drawing.Imaging;
+using System.Xml;
 
 namespace FaceRecognition.Model
 {
@@ -36,6 +39,7 @@ namespace FaceRecognition.Model
         Image<Bgr, Byte> currentFrame; 
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
+        XmlDocument xml = new XmlDocument();
         
         #endregion
 
@@ -69,6 +73,66 @@ namespace FaceRecognition.Model
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             return currentFrame;
+        }
+        public void SaveTrainingData(System.Drawing.Image face_data, string name,string savePath)
+        {
+           Random rand = new Random();
+           string facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
+         
+            while(File.Exists(savePath + facename))
+            {
+                facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
+            }        
+
+             if (!Directory.Exists(savePath))            
+                Directory.CreateDirectory(savePath);
+               
+                
+            face_data.Save(savePath + facename, ImageFormat.Jpeg);
+
+            if (File.Exists(savePath+"TrainedLabels.xml"))
+            {
+                xml.Load(savePath+"TrainedLabels.xml");
+
+                //Get the root element
+                XmlElement root = xml.DocumentElement;
+
+                XmlElement face_D = xml.CreateElement("FACE");
+                XmlElement name_D = xml.CreateElement("NAME");
+                XmlElement file_D = xml.CreateElement("FILE");
+
+                //Adding name of face and name of file
+                name_D.InnerText = name;
+                file_D.InnerText = facename;
+
+                //Constructing element for person
+                face_D.AppendChild(name_D);
+                face_D.AppendChild(file_D);
+                //Adding the new person in the end 
+                root.AppendChild(face_D);
+
+                //Save the xmlment
+                xml.Save(savePath+"TrainedLabels.xml");
+            }
+            else
+            {
+                FileStream FS_Face = File.OpenWrite(savePath+"TrainedLabels.xml");
+                using (XmlWriter writer = XmlWriter.Create(FS_Face))
+                {
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("Faces_For_Training");
+
+                    writer.WriteStartElement("FACE");
+                    writer.WriteElementString("NAME", name);
+                    writer.WriteElementString("FILE", facename);
+                    writer.WriteEndElement();
+
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+                }
+                FS_Face.Close();
+            }               
+
         }
 
     }

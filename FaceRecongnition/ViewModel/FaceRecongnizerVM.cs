@@ -69,9 +69,30 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(LabelUnderCamera));
             }
         }
-        
-        int i = 0;
-        SimpleCommand mainSelectorChangedCommand;
+        string faceName;
+        public string FaceName
+        {
+            get
+            {
+                return faceName; 
+            }
+            set
+            {
+                faceName = value;
+                NotifyPropertyChanged(nameof(FaceName));
+            }
+        }
+        #endregion
+        #region Commands
+        ICommand addFace;
+        public ICommand AddFace
+        {
+            get
+            {
+                return addFace;
+            }
+        }
+        ICommand mainSelectorChangedCommand;
         public ICommand MainSelectorChangedCommand
         {
             get
@@ -86,6 +107,12 @@ namespace FaceRecognition.ViewModel
             {
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x => faceRecognizer.Train = faceRecognizer.Train ? false:true
+            };
+
+            addFace = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x => { if(FaceName!=null) faceRecognizer.SaveTrainingData(CroppedFace.ToBitmap(), FaceName, "..\\..\\TrainedFaces\\"); }
             };
 
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
