@@ -40,7 +40,12 @@ namespace FaceRecognition.Model
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
         XmlDocument xml = new XmlDocument();
-        
+
+        List<string> namesList = new List<string>();
+        List<int> namesIdList = new List<int>();
+        List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
+        string recognizerType = "EMGU.CV.EigenFaceRecognizer";
+        FaceRecognizer recognizer;
         #endregion
 
         public FaceRecognizerModel(string cascadeCalssifierPath)
@@ -134,6 +139,63 @@ namespace FaceRecognition.Model
             }               
 
         }
+        public void LoadTrainingData(string loadPath)
+        {
+            //clearing data 
+            namesList.Clear();
+            namesIdList.Clear();
+            trainingImages.Clear();
 
+            FileStream filestream = File.OpenRead(loadPath + "TrainedLabels.xml");
+            byte[] xmlBytes = new byte[filestream.Length];
+            filestream.Read(xmlBytes, 0, (int)filestream.Length);
+            filestream.Close();
+
+            MemoryStream xmlStream = new MemoryStream(xmlBytes);
+
+            using (XmlReader xmlreader = XmlTextReader.Create(xmlStream))
+            {
+                while (xmlreader.Read())
+                {
+                    if (xmlreader.IsStartElement())
+                    {
+                        switch (xmlreader.Name)
+                        {
+                            case "NAME":
+                                if (xmlreader.Read())
+                                {
+                                    namesIdList.Add(namesList.Count); //0, 1, 2, 3....
+                                    namesList.Add(xmlreader.Value.Trim());
+                                }
+                                break;
+                            case "FILE":
+                                if (xmlreader.Read())
+                                {
+                                    trainingImages.Add(new Image<Gray, byte>(loadPath + xmlreader.Value.Trim()));
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            if (trainingImages.ToArray().Length != 0)
+            {
+                switch (recognizerType)
+                {
+                    case ("EMGU.CV.LBPHFaceRecognizer"):
+                        recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
+                        break;
+                    case ("EMGU.CV.FisherFaceRecognizer"):
+                        recognizer = new FisherFaceRecognizer(0, 3500);
+                        break;
+                    case ("EMGU.CV.EigenFaceRecognizer"):
+                    default:
+                        recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+                        break;
+                }
+                recognizer.Train((IInputArray)trainingImages, (IInputArray)namesIdList);
+
+            }
+        }
     }
 }
