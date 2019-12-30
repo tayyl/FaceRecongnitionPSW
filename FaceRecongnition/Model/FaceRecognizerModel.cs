@@ -46,6 +46,9 @@ namespace FaceRecognition.Model
         List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
         string recognizerType = "EMGU.CV.EigenFaceRecognizer";
         FaceRecognizer recognizer;
+        string personLabel;
+        int eigenThreshold = 2000;
+        float eigenDistance = 0;
         #endregion
 
         public FaceRecognizerModel(string cascadeCalssifierPath)
@@ -194,6 +197,32 @@ namespace FaceRecognition.Model
                         break;
                 }
                 recognizer.Train((IInputArray)trainingImages, (IInputArray)namesIdList);
+
+            }
+        }
+        public string Recognize(Image<Gray, byte> inputImage, int eigenThresh = -1)
+        {
+            FaceRecognizer.PredictionResult predictionResult = recognizer.Predict(inputImage);
+
+            if(predictionResult.Label== -1)
+            {
+                personLabel = "Unknown";
+                eigenDistance = 0;
+                return personLabel;
+            }
+            else
+            {
+                personLabel = namesList[predictionResult.Label];
+                eigenDistance = (float)predictionResult.Distance;
+                if (eigenThresh > -1) eigenThreshold = eigenThresh;
+
+                
+                if (recognizerType== "EMGU.CV.EigenFaceRecognizer")
+                    if (eigenDistance > eigenThreshold) return personLabel;
+                    else return "Unknown";
+                else
+                    return personLabel; // only eigenRecognizer uses eigendistance and threshold
+                
 
             }
         }
