@@ -112,7 +112,13 @@ namespace FaceRecognition.ViewModel
             addFace = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
-                ExecuteDelegate = x => { if(FaceName!=null) faceRecognizer.SaveTrainingData(CroppedFace.ToBitmap(), FaceName, "..\\..\\TrainedFaces\\"); }
+                ExecuteDelegate = x => {
+                    if (FaceName != null)
+                    {
+                        faceRecognizer.SaveTrainingData(CroppedFace.ToBitmap(), FaceName, "..\\..\\TrainedFaces\\");
+                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData("..\\..\\TrainedFaces\\");
+                    }
+                }
             };
 
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());

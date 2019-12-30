@@ -44,20 +44,21 @@ namespace FaceRecognition.Model
 
         List<string> namesList = new List<string>();
         List<int> namesIdList = new List<int>();
-        List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
+        //List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
+        List<Mat> trainingImages = new List<Mat>();
         string recognizerType = "EMGU.CV.EigenFaceRecognizer";
         FaceRecognizer recognizer;
         string personLabel;
         int eigenThreshold = 2000;
         float eigenDistance = 0;
 
-        MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.5, 0.5); //Our fount for writing within the frame
 
         #endregion
 
         public FaceRecognizerModel(string cascadeCalssifierPath)
         {
             Face= new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
+            recognizer= new EigenFaceRecognizer(80, double.PositiveInfinity);
         }
        
         public Image<Bgr,byte> ProcessFrame(Image<Bgr, byte> videoCapture)
@@ -90,7 +91,7 @@ namespace FaceRecognition.Model
                     int matchValue = (int)eigenDistance;
 
                     //draw label for every face
-                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 2, new Bgr(0, 255, 0));
+                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 0.5, new Bgr(0, 255, 0));
                 }
             });
             return currentFrame;
@@ -157,8 +158,6 @@ namespace FaceRecognition.Model
         }
         public bool LoadTrainingData(string loadPath)
         {
-            try
-            {
                 //clearing data 
                 namesList.Clear();
                 namesIdList.Clear();
@@ -189,7 +188,7 @@ namespace FaceRecognition.Model
                                 case "FILE":
                                     if (xmlreader.Read())
                                     {
-                                        trainingImages.Add(new Image<Gray, byte>(loadPath + xmlreader.Value.Trim()));
+                                        trainingImages.Add(new Mat(loadPath + xmlreader.Value.Trim()));
                                     }
                                     break;
                             }
@@ -211,15 +210,11 @@ namespace FaceRecognition.Model
                             recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
                             break;
                     }
-                    recognizer.Train((IInputArray)trainingImages, (IInputArray)namesIdList);
+                    
+                    recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
 
                 }
                 return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
         public string Recognize(Image<Gray, byte> inputImage, int eigenThresh = -1)
         {
