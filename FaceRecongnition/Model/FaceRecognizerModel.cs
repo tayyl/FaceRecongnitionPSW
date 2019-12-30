@@ -33,6 +33,7 @@ namespace FaceRecognition.Model
     {
         #region Attributes
         public bool Train { get; set; } = true;
+        public bool IsTrained { get; set; } = false;
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
         #region Variables
@@ -49,6 +50,9 @@ namespace FaceRecognition.Model
         string personLabel;
         int eigenThreshold = 2000;
         float eigenDistance = 0;
+
+        MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_COMPLEX, 0.5, 0.5); //Our fount for writing within the frame
+
         #endregion
 
         public FaceRecognizerModel(string cascadeCalssifierPath)
@@ -72,13 +76,22 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
 
-                    //draw the red frame around face which has been detected in the 0th (gray) 
                 if (Train)
                 {
                     CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
                     CroppedFace._EqualizeHist();
                 }
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
+                if (IsTrained)
+                {
+                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                    CroppedFace._EqualizeHist();
+                    string name = Recognize(CroppedFace);
+                    int matchValue = (int)eigenDistance;
+
+                    //draw label for every face
+                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 2, new Bgr(0, 255, 0));
+                }
             });
             return currentFrame;
         }
@@ -142,62 +155,70 @@ namespace FaceRecognition.Model
             }               
 
         }
-        public void LoadTrainingData(string loadPath)
+        public bool LoadTrainingData(string loadPath)
         {
-            //clearing data 
-            namesList.Clear();
-            namesIdList.Clear();
-            trainingImages.Clear();
-
-            FileStream filestream = File.OpenRead(loadPath + "TrainedLabels.xml");
-            byte[] xmlBytes = new byte[filestream.Length];
-            filestream.Read(xmlBytes, 0, (int)filestream.Length);
-            filestream.Close();
-
-            MemoryStream xmlStream = new MemoryStream(xmlBytes);
-
-            using (XmlReader xmlreader = XmlTextReader.Create(xmlStream))
+            try
             {
-                while (xmlreader.Read())
+                //clearing data 
+                namesList.Clear();
+                namesIdList.Clear();
+                trainingImages.Clear();
+
+                FileStream filestream = File.OpenRead(loadPath + "TrainedLabels.xml");
+                byte[] xmlBytes = new byte[filestream.Length];
+                filestream.Read(xmlBytes, 0, (int)filestream.Length);
+                filestream.Close();
+
+                MemoryStream xmlStream = new MemoryStream(xmlBytes);
+
+                using (XmlReader xmlreader = XmlTextReader.Create(xmlStream))
                 {
-                    if (xmlreader.IsStartElement())
+                    while (xmlreader.Read())
                     {
-                        switch (xmlreader.Name)
+                        if (xmlreader.IsStartElement())
                         {
-                            case "NAME":
-                                if (xmlreader.Read())
-                                {
-                                    namesIdList.Add(namesList.Count); //0, 1, 2, 3....
-                                    namesList.Add(xmlreader.Value.Trim());
-                                }
-                                break;
-                            case "FILE":
-                                if (xmlreader.Read())
-                                {
-                                    trainingImages.Add(new Image<Gray, byte>(loadPath + xmlreader.Value.Trim()));
-                                }
-                                break;
+                            switch (xmlreader.Name)
+                            {
+                                case "NAME":
+                                    if (xmlreader.Read())
+                                    {
+                                        namesIdList.Add(namesList.Count); //0, 1, 2, 3....
+                                        namesList.Add(xmlreader.Value.Trim());
+                                    }
+                                    break;
+                                case "FILE":
+                                    if (xmlreader.Read())
+                                    {
+                                        trainingImages.Add(new Image<Gray, byte>(loadPath + xmlreader.Value.Trim()));
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
-            }
-            if (trainingImages.ToArray().Length != 0)
-            {
-                switch (recognizerType)
+                if (trainingImages.ToArray().Length != 0)
                 {
-                    case ("EMGU.CV.LBPHFaceRecognizer"):
-                        recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
-                        break;
-                    case ("EMGU.CV.FisherFaceRecognizer"):
-                        recognizer = new FisherFaceRecognizer(0, 3500);
-                        break;
-                    case ("EMGU.CV.EigenFaceRecognizer"):
-                    default:
-                        recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
-                        break;
-                }
-                recognizer.Train((IInputArray)trainingImages, (IInputArray)namesIdList);
+                    switch (recognizerType)
+                    {
+                        case ("EMGU.CV.LBPHFaceRecognizer"):
+                            recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
+                            break;
+                        case ("EMGU.CV.FisherFaceRecognizer"):
+                            recognizer = new FisherFaceRecognizer(0, 3500);
+                            break;
+                        case ("EMGU.CV.EigenFaceRecognizer"):
+                        default:
+                            recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+                            break;
+                    }
+                    recognizer.Train((IInputArray)trainingImages, (IInputArray)namesIdList);
 
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
         public string Recognize(Image<Gray, byte> inputImage, int eigenThresh = -1)
