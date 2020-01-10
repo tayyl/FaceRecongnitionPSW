@@ -26,7 +26,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Drawing.Imaging;
 using System.Xml;
-
 namespace FaceRecognition.Model
 {
     public class FaceRecognizerModel 
@@ -60,7 +59,13 @@ namespace FaceRecognition.Model
             Face= new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
             recognizer= new EigenFaceRecognizer(80, double.PositiveInfinity);
         }
-       
+        public FaceRecognizerModel(string cascadeCalssifierPath, string loadPath)
+        {
+            Face = new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
+            recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+            IsTrained = LoadTrainingData(loadPath);
+        }
+
         public Image<Bgr,byte> ProcessFrame(Image<Bgr, byte> videoCapture)
         {
             currentFrame = videoCapture;
@@ -91,7 +96,7 @@ namespace FaceRecognition.Model
                     int matchValue = (int)eigenDistance;
 
                     //draw label for every face
-                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 0.5, new Bgr(0, 255, 0));
+                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
                 }
             });
             return currentFrame;
@@ -158,6 +163,8 @@ namespace FaceRecognition.Model
         }
         public bool LoadTrainingData(string loadPath)
         {
+            if (File.Exists(loadPath+ "\\TrainedLabels.xml"))
+            {
                 //clearing data 
                 namesList.Clear();
                 namesIdList.Clear();
@@ -188,7 +195,7 @@ namespace FaceRecognition.Model
                                 case "FILE":
                                     if (xmlreader.Read())
                                     {
-                                        trainingImages.Add(new Mat(loadPath + xmlreader.Value.Trim()));
+                                        trainingImages.Add(new Mat(loadPath + xmlreader.Value.Trim(), ImreadModes.Grayscale));
                                     }
                                     break;
                             }
@@ -210,13 +217,14 @@ namespace FaceRecognition.Model
                             recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
                             break;
                     }
-                    
                     recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
 
                 }
                 return true;
+            }
+            return false;
         }
-        public string Recognize(Image<Gray, byte> inputImage, int eigenThresh = -1)
+        public string Recognize(IInputArray inputImage, int eigenThresh = -1)
         {
             FaceRecognizer.PredictionResult predictionResult = recognizer.Predict(inputImage);
 
