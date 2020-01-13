@@ -20,13 +20,17 @@ using System.Threading;
 using System.Windows.Interop;
 using FaceRecognition.Model;
 using System.ComponentModel;
+using Microsoft.Win32;
+
 namespace FaceRecognition.ViewModel
 {
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
         #region Variables
-        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
+        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml", "..\\..\\TrainedFaces\\");
         VideoCapture videoCapture = new VideoCapture();
+        OpenFileDialog fileDialog = new OpenFileDialog();
+        bool isWebcamDispatcher = true;
         #endregion
 
         #region Attributes
@@ -84,6 +88,14 @@ namespace FaceRecognition.ViewModel
         }
         #endregion
         #region Commands
+        ICommand browseFile;
+        public ICommand BrowseFile
+        {
+            get
+            {
+                return browseFile;
+            }
+        }
         ICommand addFace;
         public ICommand AddFace
         {
@@ -106,9 +118,12 @@ namespace FaceRecognition.ViewModel
             mainSelectorChangedCommand = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
-                ExecuteDelegate = x => faceRecognizer.Train = faceRecognizer.Train ? false:true
+                ExecuteDelegate = x => {
+                    faceRecognizer.Train = faceRecognizer.Train ? false : true;
+                    if (!isWebcamDispatcher)
+                        ComponentDispatcher.ThreadIdle += WebcamProcessing;
+                }
             };
-
             addFace = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
@@ -120,14 +135,32 @@ namespace FaceRecognition.ViewModel
                     }
                 }
             };
+            browseFile = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    fileDialog.ShowDialog();
+                    ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+                    MainCamera = new Image<Bgr, byte>(fileDialog.FileName);
+                    isWebcamDispatcher = false;
+                }
+            };
 
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
             //puting into thread for better performance
-            ComponentDispatcher.ThreadIdle += (object sender, EventArgs e) => {
+            /*ComponentDispatcher.ThreadIdle += (object sender, EventArgs e) => {
                 MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
                 CroppedFace = faceRecognizer.CroppedFace;
-            };
+            };*/
+            ComponentDispatcher.ThreadIdle += WebcamProcessing;
+        }
+        void WebcamProcessing(object sender, EventArgs e)
+        {
+
+            MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+            CroppedFace = faceRecognizer.CroppedFace;
         }
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
