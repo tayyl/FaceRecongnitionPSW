@@ -24,6 +24,14 @@ using Microsoft.Win32;
 
 namespace FaceRecognition.ViewModel
 {
+    /*
+     Przygotować dane testowe
+     określić wydajność i efektywność     
+     miary wydajności 
+     ilość klatek na sekundę
+
+    czyli przygotować test
+    */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
         #region Variables
@@ -32,7 +40,6 @@ namespace FaceRecognition.ViewModel
         OpenFileDialog fileDialog = new OpenFileDialog();
         bool isWebcamDispatcher = true;
         #endregion
-
         #region Attributes
         Image<Bgr, byte> mainCamera;
         public Image<Bgr,byte> MainCamera
@@ -146,27 +153,20 @@ namespace FaceRecognition.ViewModel
                     isWebcamDispatcher = false;
                 }
             };
-
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
             //puting into thread for better performance
-            /*ComponentDispatcher.ThreadIdle += (object sender, EventArgs e) => {
-                MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
-                CroppedFace = faceRecognizer.CroppedFace;
-            };*/
             ComponentDispatcher.ThreadIdle += WebcamProcessing;
         }
         void WebcamProcessing(object sender, EventArgs e)
         {
-
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
         }
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;
         protected void NotifyPropertyChanged(string propertyName = null)
-        {
-            
+        {            
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion
