@@ -31,14 +31,23 @@ namespace FaceRecognition.ViewModel
      ilość klatek na sekundę
 
     czyli przygotować test
+
+     zaprogramowac guziki open/save/exit w menu
+     zmienic sztywna nazwe pliku .xml na mozliwa do wyboru przez uzytkownika
+     dodac mozliwosc zmiany pliku .xml i folderu w ktorym sie znajduje zbior danych
+     spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
+     dodac mozliwosc przewijania pomiedzy wieloma twarzami na obrazie
+     dodać guzik STOP
     */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
         #region Variables
+        enum Tab { Webcam = 0, File = 1 };
+        Tab TabContainer = Tab.File;
         FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml", "..\\..\\TrainedFaces\\");
         VideoCapture videoCapture = new VideoCapture();
         OpenFileDialog fileDialog = new OpenFileDialog();
-        bool isWebcamDispatcher = true;
+        Image<Bgr, byte> fileWithFacesImageTmp= null;       
         #endregion
         #region Attributes
         Image<Bgr, byte> mainCamera;
@@ -65,6 +74,19 @@ namespace FaceRecognition.ViewModel
             {
                 croppedFace = value;
                 NotifyPropertyChanged(nameof(CroppedFace));
+            }
+        }
+        Image<Gray, byte> croppedFaceFile;
+        public Image<Gray, byte> CroppedFaceFile
+        {
+            get
+            {
+                return croppedFaceFile;
+            }
+            set
+            {
+                croppedFaceFile = value;
+                NotifyPropertyChanged(nameof(CroppedFaceFile));
             }
         }
         string labelUnderCamera;
@@ -126,9 +148,21 @@ namespace FaceRecognition.ViewModel
             {
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x => {
-                    faceRecognizer.Train = faceRecognizer.Train ? false : true;
-                    if (!isWebcamDispatcher)
+                    TabContainer = TabContainer==Tab.Webcam ? Tab.File : Tab.Webcam;
+                    if (TabContainer == Tab.File)
+                    {
+                        if (!(fileWithFacesImageTmp == null))
+                        {
+                            ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+                            MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                            CroppedFaceFile = faceRecognizer.CroppedFace;
+                            CroppedFace = CroppedFaceFile;
+                        }
+                    }
+                    else
+                    {
                         ComponentDispatcher.ThreadIdle += WebcamProcessing;
+                    }
                 }
             };
             addFace = new SimpleCommand
@@ -139,6 +173,12 @@ namespace FaceRecognition.ViewModel
                     {
                         faceRecognizer.SaveTrainingData(CroppedFace.ToBitmap(), FaceName, "..\\..\\TrainedFaces\\");
                         faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData("..\\..\\TrainedFaces\\");
+                        if (TabContainer == Tab.File)
+                        {
+                            MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                            CroppedFaceFile = faceRecognizer.CroppedFace;
+                            CroppedFace = CroppedFaceFile;
+                        }
                     }
                 }
             };
@@ -148,15 +188,21 @@ namespace FaceRecognition.ViewModel
                 ExecuteDelegate = x =>
                 {
                     fileDialog.ShowDialog();
+                    fileWithFacesImageTmp = new Image<Bgr, byte>(fileDialog.FileName);
+                    
+
+                    MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                    CroppedFaceFile = faceRecognizer.CroppedFace;
+                    CroppedFace = CroppedFaceFile;
+
                     ComponentDispatcher.ThreadIdle -= WebcamProcessing;
-                    MainCamera = new Image<Bgr, byte>(fileDialog.FileName);
-                    isWebcamDispatcher = false;
                 }
             };
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
+            croppedFaceFile = new Image<Gray, byte>(50,50);
             //puting into thread for better performance
-            ComponentDispatcher.ThreadIdle += WebcamProcessing;
+           // ComponentDispatcher.ThreadIdle += WebcamProcessing;
         }
         void WebcamProcessing(object sender, EventArgs e)
         {

@@ -31,7 +31,7 @@ namespace FaceRecognition.Model
     public class FaceRecognizerModel 
     {
         #region Attributes
-        public bool Train { get; set; } = true;
+        
         public bool IsTrained { get; set; } = false;
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
@@ -82,11 +82,10 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
 
-                if (Train)
-                {
+               
                     CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
                     CroppedFace._EqualizeHist();
-                }
+                
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
                 if (IsTrained)
                 {
