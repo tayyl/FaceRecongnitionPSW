@@ -19,9 +19,8 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open"/>
-                <MenuItem Header="_Save"/>
-                <MenuItem Header="_Exit" />
+                <MenuItem Header="_Create XML" Command="{Binding CreateXML}"/>
+                <MenuItem Header="_Open XML" Command="{Binding OpenXML}" />
             </MenuItem>
             <MenuItem Header="_Options"></MenuItem>
         </Menu>

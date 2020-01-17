@@ -32,21 +32,16 @@ namespace FaceRecognition.ViewModel
 
     czyli przygotować test
 
-     zaprogramowac guziki open/save/exit w menu
-     zmienic sztywna nazwe pliku .xml na mozliwa do wyboru przez uzytkownika
-     dodac mozliwosc zmiany pliku .xml i folderu w ktorym sie znajduje zbior danych
      spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
      dodac mozliwosc przewijania pomiedzy wieloma twarzami na obrazie
-     dodać guzik STOP
     */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
         #region Variables
         enum Tab { Webcam = 0, File = 1 };
         Tab TabContainer = Tab.File;
-        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml", "..\\..\\TrainedFaces\\");
+        FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
         VideoCapture videoCapture = new VideoCapture();
-        OpenFileDialog fileDialog = new OpenFileDialog();
         Image<Bgr, byte> fileWithFacesImageTmp= null;       
         #endregion
         #region Attributes
@@ -151,6 +146,21 @@ namespace FaceRecognition.ViewModel
                 
             }
         }
+        ICommand openXML;
+        public ICommand OpenXML {
+            get
+            {
+                return openXML;
+            }
+        }
+        ICommand createXML;
+        public ICommand CreateXML
+        {
+            get
+            {
+                return createXML;
+            }
+        }
         #endregion
         public FaceRecognizerVM()
         {
@@ -175,19 +185,45 @@ namespace FaceRecognition.ViewModel
                     }
                 }
             };
+            createXML = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    SaveFileDialog fileDialog = new SaveFileDialog();
+                    fileDialog.Filter = "Pliki (*.xml)|.xml";
+                    if (fileDialog.ShowDialog() == true)
+                    {
+                        faceRecognizer.CreateXmlFile(fileDialog.FileName, fileDialog.SafeFileName);
+                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                    }
+                }
+            };
             addFace = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x => {
                     if (FaceName != null)
                     {
-                        faceRecognizer.SaveTrainingData(CroppedFace.ToBitmap(), FaceName, "..\\..\\TrainedFaces\\");
-                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData("..\\..\\TrainedFaces\\");
-                        if (TabContainer == Tab.File)
+                        if (faceRecognizer.XmlFilename != null)
                         {
-                            MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
-                            CroppedFaceFile = faceRecognizer.CroppedFace;
-                            CroppedFace = CroppedFaceFile;
+                            faceRecognizer.SaveImage(CroppedFace.ToBitmap(), FaceName);
+                            faceRecognizer.IsTrained = faceRecognizer.LoadTrainingData(faceRecognizer.ImagesSavePath+faceRecognizer.XmlFilename);
+                            if (TabContainer == Tab.File)
+                            {
+                                MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                                CroppedFaceFile = faceRecognizer.CroppedFace;
+                                CroppedFace = CroppedFaceFile;
+                            }
+                        }
+                        else
+                        {
+                            createXML.Execute(null);
+                            addFace.Execute(null);
+                           /* SaveFileDialog fileDialog = new SaveFileDialog();
+                            fileDialog.Filter = "Pliki (*.xml)|.xml";
+                            if (fileDialog.ShowDialog() == true)
+                                faceRecognizer.CreateXmlFile(fileDialog.FileName, fileDialog.SafeFileName);*/
                         }
                     }
                 }
@@ -197,15 +233,18 @@ namespace FaceRecognition.ViewModel
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x =>
                 {
-                    fileDialog.ShowDialog();
-                    fileWithFacesImageTmp = new Image<Bgr, byte>(fileDialog.FileName);
-                    
+                    OpenFileDialog fileDialog = new OpenFileDialog();
+                    if (fileDialog.ShowDialog() == true)
+                    {
+                        fileWithFacesImageTmp = new Image<Bgr, byte>(fileDialog.FileName);
 
-                    MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
-                    CroppedFaceFile = faceRecognizer.CroppedFace;
-                    CroppedFace = CroppedFaceFile;
 
-                    ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+                        MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                        CroppedFaceFile = faceRecognizer.CroppedFace;
+                        CroppedFace = CroppedFaceFile;
+
+                        ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+                    }
                 }
             };
             stopStartCamera = new SimpleCommand
@@ -228,7 +267,6 @@ namespace FaceRecognition.ViewModel
                  }
             };
             cameraButtonText = "STOP CAMERA";
-
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
             croppedFaceFile = new Image<Gray, byte>(50,50);

@@ -33,6 +33,20 @@ namespace FaceRecognition.Model
         #region Attributes
         
         public bool IsTrained { get; set; } = false;
+        public string XmlFilename 
+        { 
+            get 
+            {
+                return xmlFilename;
+            }
+        }
+        public string ImagesSavePath
+        {
+            get
+            {
+                return imagesSavePath;
+            }
+        }
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
         #region Variables
@@ -40,7 +54,8 @@ namespace FaceRecognition.Model
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
         XmlDocument xml = new XmlDocument();
-
+        string xmlFilename=null;
+        string imagesSavePath = null;
         List<string> namesList = new List<string>();
         List<int> namesIdList = new List<int>();
         //List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
@@ -83,10 +98,7 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
 
                
-                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                    CroppedFace._EqualizeHist();
                 
-                currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
                 if (IsTrained)
                 {
                     CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
@@ -97,79 +109,90 @@ namespace FaceRecognition.Model
                     //draw label for every face
                     currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
                 }
+                else
+                {
+                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                    CroppedFace._EqualizeHist();
+                }
+                currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             return currentFrame;
         }
-        public void SaveTrainingData(System.Drawing.Image face_data, string name,string savePath)
+        public void SaveImage(System.Drawing.Image face_data, string name)
         {
-           Random rand = new Random();
-           string facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
-         
-            while(File.Exists(savePath + facename))
+            if (xmlFilename != null)
             {
-                facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
-            }        
+                if (File.Exists(imagesSavePath + xmlFilename))
+                {
+                    Random rand = new Random();
+                    string facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
 
-             if (!Directory.Exists(savePath))            
-                Directory.CreateDirectory(savePath);
-               
-                
-            face_data.Save(savePath + facename, ImageFormat.Jpeg);
+                    while (File.Exists(imagesSavePath + facename))
+                    {
+                        facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
+                    }
 
-            if (File.Exists(savePath+"TrainedLabels.xml"))
-            {
-                xml.Load(savePath+"TrainedLabels.xml");
+                    if (!Directory.Exists(imagesSavePath))
+                        Directory.CreateDirectory(imagesSavePath);
 
-                //Get the root element
-                XmlElement root = xml.DocumentElement;
 
-                XmlElement face_D = xml.CreateElement("FACE");
-                XmlElement name_D = xml.CreateElement("NAME");
-                XmlElement file_D = xml.CreateElement("FILE");
+                    face_data.Save(imagesSavePath + facename, ImageFormat.Jpeg);
 
-                //Adding name of face and name of file
-                name_D.InnerText = name;
-                file_D.InnerText = facename;
+                    xml.Load(imagesSavePath + xmlFilename);
 
-                //Constructing element for person
-                face_D.AppendChild(name_D);
-                face_D.AppendChild(file_D);
-                //Adding the new person in the end 
-                root.AppendChild(face_D);
+                    //Get the root element
+                    XmlElement root = xml.DocumentElement;
 
-                //Save the xmlment
-                xml.Save(savePath+"TrainedLabels.xml");
+                    XmlElement face_D = xml.CreateElement("FACE");
+                    XmlElement name_D = xml.CreateElement("NAME");
+                    XmlElement file_D = xml.CreateElement("FILE");
+
+                    //Adding name of face and name of file
+                    name_D.InnerText = name;
+                    file_D.InnerText = facename;
+
+                    //Constructing element for person
+                    face_D.AppendChild(name_D);
+                    face_D.AppendChild(file_D);
+                    //Adding the new person in the end 
+                    root.AppendChild(face_D);
+
+                    //Save the xmlment
+                    xml.Save(imagesSavePath + xmlFilename);
+                }
             }
-            else
-            {
-                FileStream FS_Face = File.OpenWrite(savePath+"TrainedLabels.xml");
+        }
+        public bool CreateXmlFile(string savePath, string filename)
+        {
+                xmlFilename = filename;
+                this.imagesSavePath = savePath.Substring(0, savePath.Count() - xmlFilename.Count()); ;
+                FileStream FS_Face = File.OpenWrite(savePath);
                 using (XmlWriter writer = XmlWriter.Create(FS_Face))
                 {
                     writer.WriteStartDocument();
                     writer.WriteStartElement("Faces_For_Training");
 
-                    writer.WriteStartElement("FACE");
-                    writer.WriteElementString("NAME", name);
-                    writer.WriteElementString("FILE", facename);
-                    writer.WriteEndElement();
 
                     writer.WriteEndElement();
                     writer.WriteEndDocument();
                 }
                 FS_Face.Close();
-            }               
 
+                return true;
+            
         }
         public bool LoadTrainingData(string loadPath)
         {
-            if (File.Exists(loadPath+ "\\TrainedLabels.xml"))
+            if (File.Exists(loadPath))
             {
+                xmlFilename = loadPath.Split('\\')[loadPath.Split('\\').Count()-1];
+                imagesSavePath = loadPath.Substring(0, loadPath.Count() - xmlFilename.Count());
                 //clearing data 
                 namesList.Clear();
                 namesIdList.Clear();
                 trainingImages.Clear();
 
-                FileStream filestream = File.OpenRead(loadPath + "TrainedLabels.xml");
+                FileStream filestream = File.OpenRead(loadPath);
                 byte[] xmlBytes = new byte[filestream.Length];
                 filestream.Read(xmlBytes, 0, (int)filestream.Length);
                 filestream.Close();
@@ -194,7 +217,15 @@ namespace FaceRecognition.Model
                                 case "FILE":
                                     if (xmlreader.Read())
                                     {
-                                        trainingImages.Add(new Mat(loadPath + xmlreader.Value.Trim(), ImreadModes.Grayscale));
+                                        if (File.Exists(imagesSavePath + xmlreader.Value.Trim()))
+                                        {
+                                            trainingImages.Add(new Mat(imagesSavePath + xmlreader.Value.Trim(), ImreadModes.Grayscale));
+                                        }
+                                        else
+                                        {
+                                            namesIdList.Remove(namesIdList.Last());
+                                            namesList.Remove(namesList.Last());
+                                        }
                                     }
                                     break;
                             }
@@ -217,9 +248,10 @@ namespace FaceRecognition.Model
                             break;
                     }
                     recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
+                    return true;
 
                 }
-                return true;
+                return false;
             }
             return false;
         }
