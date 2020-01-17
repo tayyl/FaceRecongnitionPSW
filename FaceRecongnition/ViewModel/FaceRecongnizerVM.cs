@@ -89,19 +89,6 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(CroppedFaceFile));
             }
         }
-        string labelUnderCamera;
-        public string LabelUnderCamera
-        {
-            get
-            {
-                return labelUnderCamera;
-            }
-            set
-            {
-                labelUnderCamera = value;
-                NotifyPropertyChanged(nameof(LabelUnderCamera));
-            }
-        }
         string faceName;
         public string FaceName
         {
@@ -113,6 +100,20 @@ namespace FaceRecognition.ViewModel
             {
                 faceName = value;
                 NotifyPropertyChanged(nameof(FaceName));
+            }
+        }
+        string cameraButtonText;
+        public string CameraButtonText
+        {
+            get
+            {
+                return cameraButtonText;
+
+            }
+            set
+            {
+                cameraButtonText = value;
+                NotifyPropertyChanged(nameof(CameraButtonText));
             }
         }
         #endregion
@@ -139,6 +140,15 @@ namespace FaceRecognition.ViewModel
             get
             {
                 return mainSelectorChangedCommand;
+            }
+        }
+        ICommand stopStartCamera;
+        public ICommand StopStartCamera
+        {
+            get
+            {
+                return stopStartCamera;
+                
             }
         }
         #endregion
@@ -198,6 +208,27 @@ namespace FaceRecognition.ViewModel
                     ComponentDispatcher.ThreadIdle -= WebcamProcessing;
                 }
             };
+            stopStartCamera = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                 {
+                     if (CameraButtonText == "STOP CAMERA")
+                     {
+                         ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+                       //  videoCapture.Stop();
+                         CameraButtonText = "START CAMERA";
+                     }
+                     else
+                     {
+                        // videoCapture.Start();
+                         ComponentDispatcher.ThreadIdle += WebcamProcessing;
+                         CameraButtonText = "STOP CAMERA";
+                     }
+                 }
+            };
+            cameraButtonText = "STOP CAMERA";
+
             MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
             CroppedFace = faceRecognizer.CroppedFace;
             croppedFaceFile = new Image<Gray, byte>(50,50);

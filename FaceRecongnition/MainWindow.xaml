@@ -38,6 +38,7 @@
                         <Button Content="ADD 10 IMAGES" Width="90" Height="20" Margin="45,213,153,160"/>
                         <Label Content="Name" Width="70" Margin="45,251,173,121" Padding="0"/>
                         <TextBox Width="200" Height="20" Margin="45,272,43,101" Text="{Binding FaceName, Mode=TwoWay}"/>
+                        <Button Content="{Binding CameraButtonText}" Command="{Binding StopStartCamera}" Width="180" Height="40" Margin="0,250,0,0"/>
                     </Grid>
                 </TabItem>
                         
