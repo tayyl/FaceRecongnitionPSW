@@ -185,13 +185,26 @@ namespace FaceRecognition.ViewModel
                     }
                 }
             };
+            openXML = new SimpleCommand
+            {
+                CanExecuteDelegate=x=>true,
+                ExecuteDelegate = x =>
+                {
+                    OpenFileDialog fileDialog = new OpenFileDialog();
+                    fileDialog.Filter = "Pliki (*.xml)|*.xml";
+                    if(fileDialog.ShowDialog()== true)
+                    {
+                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                    }
+                }
+            };
             createXML = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x =>
                 {
                     SaveFileDialog fileDialog = new SaveFileDialog();
-                    fileDialog.Filter = "Pliki (*.xml)|.xml";
+                    fileDialog.Filter = "Pliki (*.xml)|*.xml";
                     if (fileDialog.ShowDialog() == true)
                     {
                         faceRecognizer.CreateXmlFile(fileDialog.FileName, fileDialog.SafeFileName);
@@ -220,10 +233,6 @@ namespace FaceRecognition.ViewModel
                         {
                             createXML.Execute(null);
                             addFace.Execute(null);
-                           /* SaveFileDialog fileDialog = new SaveFileDialog();
-                            fileDialog.Filter = "Pliki (*.xml)|.xml";
-                            if (fileDialog.ShowDialog() == true)
-                                faceRecognizer.CreateXmlFile(fileDialog.FileName, fileDialog.SafeFileName);*/
                         }
                     }
                 }
