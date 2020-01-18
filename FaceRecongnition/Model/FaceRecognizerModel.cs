@@ -55,7 +55,7 @@ namespace FaceRecognition.Model
         string recognizerType = "EMGU.CV.EigenFaceRecognizer";
         FaceRecognizer recognizer=new EigenFaceRecognizer(80, double.PositiveInfinity);
         string personLabel;
-        int eigenThreshold = 2000;
+        int eigenThreshold = 3000;
         float eigenDistance = 0;
 
 
@@ -87,27 +87,23 @@ namespace FaceRecognition.Model
                     detectedFaces[i].X += (int)(detectedFaces[i].Height * 0.15);
                     detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.20);
                     detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
-                    detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);               
-                
+                    detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
+                Image<Gray, byte> tmp = new Image<Gray, byte>(50, 50);
+                tmp = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                tmp._EqualizeHist();
+                CroppedFaces.Add(tmp);
                 if (IsTrained)
                 {
-                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                    CroppedFace._EqualizeHist();
-                    string name = Recognize(CroppedFace);
+                    string name = Recognize(tmp);
                     int matchValue = (int)eigenDistance;
 
                     //draw label for every face
                     currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
                 }
-                else
-                {
                     //  CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
                     //  CroppedFace._EqualizeHist();
-                    Image<Gray, byte> tmp = new Image<Gray,byte>(50,50);
-                    tmp = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                    tmp._EqualizeHist();
-                    CroppedFaces.Add(tmp);
-                }
+                    
+                
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             if (CroppedFaces.Count == 0)

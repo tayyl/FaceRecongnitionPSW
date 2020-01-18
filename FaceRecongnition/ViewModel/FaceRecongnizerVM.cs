@@ -33,7 +33,6 @@ namespace FaceRecognition.ViewModel
     czyli przygotować test
 
      spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
-     dodac mozliwosc przewijania pomiedzy wieloma twarzami na obrazie
     */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
@@ -44,6 +43,7 @@ namespace FaceRecognition.ViewModel
         VideoCapture videoCapture = new VideoCapture();
         Image<Bgr, byte> fileWithFacesImageTmp= null;
         List<Image<Gray, byte>> croppedFacesTmp = new List<Image<Gray, byte>>();
+        List<Image<Gray, byte>> croppedFacesFileTmp = new List<Image<Gray, byte>>();
         int croppedFaceIndex = 0;
         #endregion
         #region Attributes
@@ -201,6 +201,7 @@ namespace FaceRecognition.ViewModel
                     }
                     else
                     {
+                        croppedFaceIndex = 0;
                         if(!(fileWithFacesImageTmp==null)) 
                         ComponentDispatcher.ThreadIdle += WebcamProcessing;
                     }
@@ -245,7 +246,7 @@ namespace FaceRecognition.ViewModel
                             faceRecognizer.IsTrained = faceRecognizer.LoadTrainingData(faceRecognizer.ImagesSavePath+faceRecognizer.XmlFilename);
                             if (TabContainer == Tab.File)
                             {
-                                croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+                                croppedFacesTmp = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
                                 CroppedFace = croppedFacesTmp[croppedFaceIndex];
                                 MainCamera = faceRecognizer.CurrentFrame;
                                 CroppedFaceFile = CroppedFace;
@@ -305,12 +306,24 @@ namespace FaceRecognition.ViewModel
             nextCroppedFace = new SimpleCommand
             {
                 CanExecuteDelegate = x => croppedFaceIndex < faceRecognizer.CroppedFacesCount-1,
-                ExecuteDelegate = x => { croppedFaceIndex++; CroppedFace = croppedFacesTmp[croppedFaceIndex]; }
+                ExecuteDelegate = x => { 
+                    croppedFaceIndex++;
+                    if (TabContainer == Tab.Webcam)
+                        CroppedFace = croppedFacesTmp[croppedFaceIndex];
+                    else
+                        CroppedFaceFile = croppedFacesTmp[croppedFaceIndex];
+                }
             };
             backCroppedFace = new SimpleCommand
             {
                 CanExecuteDelegate = x => croppedFaceIndex >0,
-                ExecuteDelegate = x => { croppedFaceIndex--; CroppedFace = croppedFacesTmp[croppedFaceIndex]; }
+                ExecuteDelegate = x => { 
+                    croppedFaceIndex--;
+                    if (TabContainer == Tab.Webcam)
+                        CroppedFace = croppedFacesTmp[croppedFaceIndex];
+                    else
+                        CroppedFaceFile = croppedFacesTmp[croppedFaceIndex];
+                }
             };
             cameraButtonText = "STOP CAMERA";
             croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());

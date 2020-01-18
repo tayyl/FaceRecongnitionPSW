@@ -45,10 +45,12 @@
                 <TabItem Header="File" >
                     <Grid Background="#FFE5E5E5">
                         <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom" Source="{Binding CroppedFaceFile, Converter={StaticResource ToBitmapGraySourceConverter}}" />
-                        <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160" Command="{Binding AddFace}"/>
-                        <Button Content="BROWSE" Width="70" Height="20" Margin="25,213,153,160" Command="{Binding BrowseFile}" />
-                        <Label Content="Name" Width="70" Margin="0,250,125,0" Padding="0"/>
-                        <TextBox Width="200" Height="20" Margin="0,165,0,0" Text="{Binding FaceName, Mode=TwoWay}"/>
+                        <Button Content=">>" Width="70" Height="20" Margin="175,213,43,160" Command="{Binding NextCroppedFace}"/>
+                        <Button Content="&lt;&lt;" Width="70" Height="20" Margin="25,213,153,160" Command="{Binding BackCroppedFace}"/>
+                        <Button Content="BROWSE" Width="70" Height="30" Margin="0,232,130,100" Command="{Binding BrowseFile}"/>
+                        <Button Content="ADD IMAGE" Width="70" Height="30" Margin="130,232,0,100" Command="{Binding AddFace}"/>
+                        <Label Content="Name" Width="70" Margin="0,280,125,0" Padding="0"/>
+                        <TextBox Width="200" Height="20" Margin="0,222,0,0" Text="{Binding FaceName, Mode=TwoWay}"/>
                     </Grid>
                 </TabItem>
             </TabControl>
