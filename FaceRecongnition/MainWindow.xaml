@@ -33,11 +33,12 @@
                 <TabItem Header="Webcam" >
                     <Grid  Background="#FFE5E5E5" >
                         <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom" Source="{Binding CroppedFace, Converter={StaticResource ToBitmapGraySourceConverter}}"/>
-                        <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160" Command="{Binding AddFace}"/>
-                        <Button Content="ADD 10 IMAGES" Width="90" Height="20" Margin="45,213,153,160"/>
-                        <Label Content="Name" Width="70" Margin="45,251,173,121" Padding="0"/>
-                        <TextBox Width="200" Height="20" Margin="45,272,43,101" Text="{Binding FaceName, Mode=TwoWay}"/>
-                        <Button Content="{Binding CameraButtonText}" Command="{Binding StopStartCamera}" Width="180" Height="40" Margin="0,250,0,0"/>
+                        <Button Content=">>" Width="70" Height="20" Margin="175,213,43,160" />
+                        <Button Content="&lt;&lt;" Width="70" Height="20" Margin="25,213,153,160"/>
+                        <Button Content="ADD IMAGE" Width="200" Height="30" Margin="45,232,43,101" Command="{Binding AddFace}"/>
+                        <Label Content="Name" Width="70" Margin="0,280,125,0" Padding="0"/>
+                        <TextBox Width="200" Height="20" Margin="0,222,0,0" Text="{Binding FaceName, Mode=TwoWay}"/>
+                        <Button Content="{Binding CameraButtonText}" Command="{Binding StopStartCamera}" Width="200" Height="30" Margin="0,300,0,0"/>
                     </Grid>
                 </TabItem>
                         
@@ -45,9 +46,9 @@
                     <Grid Background="#FFE5E5E5">
                         <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom" Source="{Binding CroppedFaceFile, Converter={StaticResource ToBitmapGraySourceConverter}}" />
                         <Button Content="ADD IMAGE" Width="70" Height="20" Margin="175,213,43,160" Command="{Binding AddFace}"/>
-                        <Button Content="BROWSE" Width="70" Height="20" Margin="45,213,153,160" Command="{Binding BrowseFile}" />
-                        <Label Content="Name" Width="70" Margin="45,251,173,121" Padding="0"/>
-                        <TextBox Width="200" Height="20" Margin="45,272,43,101" Text="{Binding FaceName, Mode=TwoWay}"/>
+                        <Button Content="BROWSE" Width="70" Height="20" Margin="25,213,153,160" Command="{Binding BrowseFile}" />
+                        <Label Content="Name" Width="70" Margin="0,250,125,0" Padding="0"/>
+                        <TextBox Width="200" Height="20" Margin="0,165,0,0" Text="{Binding FaceName, Mode=TwoWay}"/>
                     </Grid>
                 </TabItem>
             </TabControl>

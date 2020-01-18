@@ -164,6 +164,7 @@ namespace FaceRecognition.ViewModel
         #endregion
         public FaceRecognizerVM()
         {
+            ComponentDispatcher.ThreadIdle += WebcamProcessing;
             mainSelectorChangedCommand = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
@@ -181,6 +182,7 @@ namespace FaceRecognition.ViewModel
                     }
                     else
                     {
+                        if(!(fileWithFacesImageTmp==null)) 
                         ComponentDispatcher.ThreadIdle += WebcamProcessing;
                     }
                 }

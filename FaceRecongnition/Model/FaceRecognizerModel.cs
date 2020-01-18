@@ -47,10 +47,18 @@ namespace FaceRecognition.Model
                 return imagesSavePath;
             }
         }
+        public List<Image<Gray,byte>> CroppedFaces
+        {
+            get
+            {
+                return croppedFaces;
+            }
+        }
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
         #region Variables
-        Image<Bgr, Byte> currentFrame; 
+        List<Image<Gray, byte>> croppedFaces = new List<Image<Gray, byte>>();       
+        Image<Bgr, byte> currentFrame; 
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
         XmlDocument xml = new XmlDocument();
@@ -58,10 +66,9 @@ namespace FaceRecognition.Model
         string imagesSavePath = null;
         List<string> namesList = new List<string>();
         List<int> namesIdList = new List<int>();
-        //List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
         List<Mat> trainingImages = new List<Mat>();
         string recognizerType = "EMGU.CV.EigenFaceRecognizer";
-        FaceRecognizer recognizer;
+        FaceRecognizer recognizer=new EigenFaceRecognizer(80, double.PositiveInfinity);
         string personLabel;
         int eigenThreshold = 2000;
         float eigenDistance = 0;
@@ -72,17 +79,17 @@ namespace FaceRecognition.Model
         public FaceRecognizerModel(string cascadeCalssifierPath)
         {
             Face= new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
-            recognizer= new EigenFaceRecognizer(80, double.PositiveInfinity);
+            
         }
         public FaceRecognizerModel(string cascadeCalssifierPath, string loadPath)
         {
             Face = new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
-            recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
             IsTrained = LoadTrainingData(loadPath);
         }
 
         public Image<Bgr,byte> ProcessFrame(Image<Bgr, byte> videoCapture)
         {
+            croppedFaces.Clear();
             currentFrame = videoCapture;
             currentFrame.Resize(320, 240, Inter.Cubic); //resizing so can work with smaller picture for better performance
 
@@ -95,9 +102,7 @@ namespace FaceRecognition.Model
                     detectedFaces[i].X += (int)(detectedFaces[i].Height * 0.15);
                     detectedFaces[i].Y += (int)(detectedFaces[i].Width * 0.20);
                     detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
-                    detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
-
-               
+                    detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);               
                 
                 if (IsTrained)
                 {
@@ -111,8 +116,12 @@ namespace FaceRecognition.Model
                 }
                 else
                 {
-                    CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                    CroppedFace._EqualizeHist();
+                    //  CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                    //  CroppedFace._EqualizeHist();
+                    Image<Gray, byte> tmp = new Image<Gray,byte>(50,50);
+                    tmp = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                    tmp._EqualizeHist();
+                    croppedFaces.Add(tmp);
                 }
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
