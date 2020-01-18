@@ -42,7 +42,9 @@ namespace FaceRecognition.ViewModel
         Tab TabContainer = Tab.File;
         FaceRecognizerModel faceRecognizer = new FaceRecognizerModel("..\\..\\CascadesXML\\haarcascade_frontalface_default.xml");
         VideoCapture videoCapture = new VideoCapture();
-        Image<Bgr, byte> fileWithFacesImageTmp= null;       
+        Image<Bgr, byte> fileWithFacesImageTmp= null;
+        List<Image<Gray, byte>> croppedFacesTmp = new List<Image<Gray, byte>>();
+        int croppedFaceIndex = 0;
         #endregion
         #region Attributes
         Image<Bgr, byte> mainCamera;
@@ -161,6 +163,22 @@ namespace FaceRecognition.ViewModel
                 return createXML;
             }
         }
+        ICommand nextCroppedFace;
+        public ICommand NextCroppedFace
+        {
+            get
+            {
+                return nextCroppedFace;
+            }
+        }
+        ICommand backCroppedFace;
+        public ICommand BackCroppedFace
+        {
+            get
+            {
+                return backCroppedFace;
+            }
+        }
         #endregion
         public FaceRecognizerVM()
         {
@@ -175,9 +193,10 @@ namespace FaceRecognition.ViewModel
                         if (!(fileWithFacesImageTmp == null))
                         {
                             ComponentDispatcher.ThreadIdle -= WebcamProcessing;
-                            MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
-                            CroppedFaceFile = faceRecognizer.CroppedFace;
-                            CroppedFace = CroppedFaceFile;
+                            croppedFacesTmp = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                            CroppedFace = croppedFacesTmp[croppedFaceIndex];
+                            MainCamera = faceRecognizer.CurrentFrame;
+                            CroppedFaceFile = CroppedFace;
                         }
                     }
                     else
@@ -226,9 +245,10 @@ namespace FaceRecognition.ViewModel
                             faceRecognizer.IsTrained = faceRecognizer.LoadTrainingData(faceRecognizer.ImagesSavePath+faceRecognizer.XmlFilename);
                             if (TabContainer == Tab.File)
                             {
-                                MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
-                                CroppedFaceFile = faceRecognizer.CroppedFace;
-                                CroppedFace = CroppedFaceFile;
+                                croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+                                CroppedFace = croppedFacesTmp[croppedFaceIndex];
+                                MainCamera = faceRecognizer.CurrentFrame;
+                                CroppedFaceFile = CroppedFace;
                             }
                         }
                         else
@@ -249,12 +269,13 @@ namespace FaceRecognition.ViewModel
                     {
                         fileWithFacesImageTmp = new Image<Bgr, byte>(fileDialog.FileName);
 
-
-                        MainCamera = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
-                        CroppedFaceFile = faceRecognizer.CroppedFace;
-                        CroppedFace = CroppedFaceFile;
-
                         ComponentDispatcher.ThreadIdle -= WebcamProcessing;
+
+                        croppedFacesTmp = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
+                        CroppedFace = croppedFacesTmp[croppedFaceIndex];
+                        MainCamera = faceRecognizer.CurrentFrame;
+                        CroppedFaceFile = CroppedFace;
+
                     }
                 }
             };
@@ -271,23 +292,37 @@ namespace FaceRecognition.ViewModel
                      }
                      else
                      {
-                        // videoCapture.Start();
+                         // videoCapture.Start();
+                         croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+                         if (croppedFacesTmp.Count < croppedFaceIndex) croppedFaceIndex = 0;
+                         
+
                          ComponentDispatcher.ThreadIdle += WebcamProcessing;
                          CameraButtonText = "STOP CAMERA";
                      }
                  }
             };
+            nextCroppedFace = new SimpleCommand
+            {
+                CanExecuteDelegate = x => croppedFaceIndex < faceRecognizer.CroppedFacesCount-1,
+                ExecuteDelegate = x => { croppedFaceIndex++; CroppedFace = croppedFacesTmp[croppedFaceIndex]; }
+            };
+            backCroppedFace = new SimpleCommand
+            {
+                CanExecuteDelegate = x => croppedFaceIndex >0,
+                ExecuteDelegate = x => { croppedFaceIndex--; CroppedFace = croppedFacesTmp[croppedFaceIndex]; }
+            };
             cameraButtonText = "STOP CAMERA";
-            MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
-            CroppedFace = faceRecognizer.CroppedFace;
+            croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+            CroppedFace = croppedFacesTmp[croppedFaceIndex];
+            MainCamera = faceRecognizer.CurrentFrame;
             croppedFaceFile = new Image<Gray, byte>(50,50);
-            //puting into thread for better performance
-           // ComponentDispatcher.ThreadIdle += WebcamProcessing;
         }
         void WebcamProcessing(object sender, EventArgs e)
         {
-            MainCamera = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
-            CroppedFace = faceRecognizer.CroppedFace;
+            croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
+            CroppedFace = croppedFacesTmp[croppedFaceIndex];
+            MainCamera = faceRecognizer.CurrentFrame;
         }
         #region Events
         public event PropertyChangedEventHandler PropertyChanged;

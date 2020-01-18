@@ -31,39 +31,24 @@ namespace FaceRecognition.Model
     public class FaceRecognizerModel 
     {
         #region Attributes
-        
+        public int CroppedFacesCount { get; set; } = 0;
         public bool IsTrained { get; set; } = false;
-        public string XmlFilename 
-        { 
-            get 
-            {
-                return xmlFilename;
-            }
-        }
-        public string ImagesSavePath
-        {
+        public string XmlFilename { get; set; } = null;
+        public string ImagesSavePath { get; set; } = null;
+        Image<Bgr, byte> currentFrame;
+        public Image<Bgr, byte> CurrentFrame {
             get
             {
-                return imagesSavePath;
-            }
-        }
-        public List<Image<Gray,byte>> CroppedFaces
-        {
-            get
-            {
-                return croppedFaces;
+                return currentFrame;
             }
         }
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
-        #region Variables
-        List<Image<Gray, byte>> croppedFaces = new List<Image<Gray, byte>>();       
-        Image<Bgr, byte> currentFrame; 
+        #region Variables 
+      
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
         XmlDocument xml = new XmlDocument();
-        string xmlFilename=null;
-        string imagesSavePath = null;
         List<string> namesList = new List<string>();
         List<int> namesIdList = new List<int>();
         List<Mat> trainingImages = new List<Mat>();
@@ -87,9 +72,9 @@ namespace FaceRecognition.Model
             IsTrained = LoadTrainingData(loadPath);
         }
 
-        public Image<Bgr,byte> ProcessFrame(Image<Bgr, byte> videoCapture)
+        public List<Image<Gray,byte>> ProcessFrame(Image<Bgr, byte> videoCapture)
         {
-            croppedFaces.Clear();
+            List<Image<Gray, byte>> CroppedFaces = new List<Image<Gray, byte>>(); 
             currentFrame = videoCapture;
             currentFrame.Resize(320, 240, Inter.Cubic); //resizing so can work with smaller picture for better performance
 
@@ -121,33 +106,38 @@ namespace FaceRecognition.Model
                     Image<Gray, byte> tmp = new Image<Gray,byte>(50,50);
                     tmp = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
                     tmp._EqualizeHist();
-                    croppedFaces.Add(tmp);
+                    CroppedFaces.Add(tmp);
                 }
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
-            return currentFrame;
+            if (CroppedFaces.Count == 0)
+            {
+                CroppedFaces.Add(new Image<Gray, byte>(50, 50));
+            }
+            CroppedFacesCount = CroppedFaces.Count;
+            return CroppedFaces;
         }
         public void SaveImage(System.Drawing.Image face_data, string name)
         {
-            if (xmlFilename != null)
+            if (XmlFilename != null)
             {
-                if (File.Exists(imagesSavePath + xmlFilename))
+                if (File.Exists(ImagesSavePath + XmlFilename))
                 {
                     Random rand = new Random();
                     string facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
 
-                    while (File.Exists(imagesSavePath + facename))
+                    while (File.Exists(ImagesSavePath + facename))
                     {
                         facename = "face_" + name + "_" + rand.Next().ToString() + ".jpg";
                     }
 
-                    if (!Directory.Exists(imagesSavePath))
-                        Directory.CreateDirectory(imagesSavePath);
+                    if (!Directory.Exists(ImagesSavePath))
+                        Directory.CreateDirectory(ImagesSavePath);
 
 
-                    face_data.Save(imagesSavePath + facename, ImageFormat.Jpeg);
+                    face_data.Save(ImagesSavePath + facename, ImageFormat.Jpeg);
 
-                    xml.Load(imagesSavePath + xmlFilename);
+                    xml.Load(ImagesSavePath + XmlFilename);
 
                     //Get the root element
                     XmlElement root = xml.DocumentElement;
@@ -167,14 +157,14 @@ namespace FaceRecognition.Model
                     root.AppendChild(face_D);
 
                     //Save the xmlment
-                    xml.Save(imagesSavePath + xmlFilename);
+                    xml.Save(ImagesSavePath + XmlFilename);
                 }
             }
         }
         public bool CreateXmlFile(string savePath, string filename)
         {
-                xmlFilename = filename;
-                this.imagesSavePath = savePath.Substring(0, savePath.Count() - xmlFilename.Count()); ;
+                XmlFilename = filename;
+                this.ImagesSavePath = savePath.Substring(0, savePath.Count() - XmlFilename.Count()); ;
                 FileStream FS_Face = File.OpenWrite(savePath);
                 using (XmlWriter writer = XmlWriter.Create(FS_Face))
                 {
@@ -194,8 +184,8 @@ namespace FaceRecognition.Model
         {
             if (File.Exists(loadPath))
             {
-                xmlFilename = loadPath.Split('\\')[loadPath.Split('\\').Count()-1];
-                imagesSavePath = loadPath.Substring(0, loadPath.Count() - xmlFilename.Count());
+                XmlFilename = loadPath.Split('\\')[loadPath.Split('\\').Count()-1];
+                ImagesSavePath = loadPath.Substring(0, loadPath.Count() - XmlFilename.Count());
                 //clearing data 
                 namesList.Clear();
                 namesIdList.Clear();
@@ -226,9 +216,9 @@ namespace FaceRecognition.Model
                                 case "FILE":
                                     if (xmlreader.Read())
                                     {
-                                        if (File.Exists(imagesSavePath + xmlreader.Value.Trim()))
+                                        if (File.Exists(ImagesSavePath + xmlreader.Value.Trim()))
                                         {
-                                            trainingImages.Add(new Mat(imagesSavePath + xmlreader.Value.Trim(), ImreadModes.Grayscale));
+                                            trainingImages.Add(new Mat(ImagesSavePath + xmlreader.Value.Trim(), ImreadModes.Grayscale));
                                         }
                                         else
                                         {

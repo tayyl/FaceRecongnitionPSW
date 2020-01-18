@@ -49,6 +49,8 @@ namespace FaceRecognition.Converters
         {
             Emgu.CV.Image<Gray, byte> myValue;
             myValue = (Emgu.CV.Image<Gray, byte>)value;
+            if (myValue == null)
+                myValue = new Emgu.CV.Image<Gray, byte>(50, 50);
             using (System.Drawing.Bitmap source = myValue.Bitmap)
             {
                 IntPtr ptr = source.GetHbitmap(); //obtain the Hbitmap  

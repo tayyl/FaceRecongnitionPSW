@@ -33,8 +33,8 @@
                 <TabItem Header="Webcam" >
                     <Grid  Background="#FFE5E5E5" >
                         <Image Margin="45,10,45,190" Width="200" Height="200" VerticalAlignment="Bottom" Source="{Binding CroppedFace, Converter={StaticResource ToBitmapGraySourceConverter}}"/>
-                        <Button Content=">>" Width="70" Height="20" Margin="175,213,43,160" />
-                        <Button Content="&lt;&lt;" Width="70" Height="20" Margin="25,213,153,160"/>
+                        <Button Content=">>" Width="70" Height="20" Margin="175,213,43,160" Command="{Binding NextCroppedFace}"/>
+                        <Button Content="&lt;&lt;" Width="70" Height="20" Margin="25,213,153,160" Command="{Binding BackCroppedFace}"/>
                         <Button Content="ADD IMAGE" Width="200" Height="30" Margin="45,232,43,101" Command="{Binding AddFace}"/>
                         <Label Content="Name" Width="70" Margin="0,280,125,0" Padding="0"/>
                         <TextBox Width="200" Height="20" Margin="0,222,0,0" Text="{Binding FaceName, Mode=TwoWay}"/>
