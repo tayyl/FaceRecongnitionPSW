@@ -33,6 +33,8 @@ namespace FaceRecognition.ViewModel
     czyli przygotować test
 
      spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
+
+     skalowalnosc
     */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
@@ -295,7 +297,7 @@ namespace FaceRecognition.ViewModel
                      {
                          // videoCapture.Start();
                          croppedFacesTmp = faceRecognizer.ProcessFrame(videoCapture.QueryFrame().ToImage<Bgr, byte>());
-                         if (croppedFacesTmp.Count < croppedFaceIndex) croppedFaceIndex = 0;
+                         croppedFaceIndex = 0;
                          
 
                          ComponentDispatcher.ThreadIdle += WebcamProcessing;
