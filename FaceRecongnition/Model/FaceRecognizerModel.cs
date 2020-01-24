@@ -32,7 +32,8 @@ namespace FaceRecognition.Model
     {
         #region Attributes
         public int CroppedFacesCount { get; set; } = 0;
-        public bool IsTrained { get; set; } = false;
+        public bool IsLoaded { get; set; } = false;
+        public bool IsTrained{ get; set; } = false;
         public string XmlFilename { get; set; } = null;
         public string ImagesSavePath { get; set; } = null;
         Image<Bgr, byte> currentFrame;
@@ -69,7 +70,8 @@ namespace FaceRecognition.Model
         public FaceRecognizerModel(string cascadeCalssifierPath, string loadPath)
         {
             Face = new CascadeClassifier(System.AppDomain.CurrentDomain.BaseDirectory + cascadeCalssifierPath);
-            IsTrained = LoadTrainingData(loadPath);
+            IsLoaded = LoadTrainingData(loadPath);
+            if (IsLoaded) IsTrained=TrainLoadedXML();
         }
 
         public List<Image<Gray,byte>> ProcessFrame(Image<Bgr, byte> videoCapture)
@@ -227,26 +229,45 @@ namespace FaceRecognition.Model
                         }
                     }
                 }
-                if (trainingImages.ToArray().Length != 0)
-                {
-                    switch (recognizerType)
-                    {
-                        case ("EMGU.CV.LBPHFaceRecognizer"):
-                            recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
-                            break;
-                        case ("EMGU.CV.FisherFaceRecognizer"):
-                            recognizer = new FisherFaceRecognizer(0, 3500);
-                            break;
-                        case ("EMGU.CV.EigenFaceRecognizer"):
-                        default:
-                            recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
-                            break;
-                    }
-                    recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
-                    return true;
+                return true;
+            }
+            return false;
+        }
+        public bool LoadRecognizerModel(string loadPath)
+        {
+            if (File.Exists(loadPath))
+            {
+                recognizer.Read(loadPath);
+                return true;
+            }
+            return false;
+        }
+        public void SaveRecognizerModel(string savePath)
+        {
+            recognizer.Write(savePath);
 
+        }
+        public bool TrainLoadedXML()
+        {
+
+            if (trainingImages.ToArray().Length != 0)
+            {
+                switch (recognizerType)
+                {
+                    case ("EMGU.CV.LBPHFaceRecognizer"):
+                        recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
+                        break;
+                    case ("EMGU.CV.FisherFaceRecognizer"):
+                        recognizer = new FisherFaceRecognizer(0, 3500);
+                        break;
+                    case ("EMGU.CV.EigenFaceRecognizer"):
+                    default:
+                        recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
+                        break;
                 }
-                return false;
+                recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
+                return true;
+
             }
             return false;
         }

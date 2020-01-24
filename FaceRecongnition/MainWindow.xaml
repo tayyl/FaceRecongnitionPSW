@@ -21,6 +21,11 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Create XML" Command="{Binding CreateXML}"/>
                 <MenuItem Header="_Open XML" Command="{Binding OpenXML}" />
+                <MenuItem Header="_Save Recognizer Model" Command="{Binding SaveRecognizerModel}"/>
+                <MenuItem Header="_Load Recognizer Model" Command="{Binding LoadRecognizerModel}" />
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem Header="_Train Loaded XML" Command="{Binding TrainLoadedXML}"/>
             </MenuItem>
             <MenuItem Header="_Options"></MenuItem>
         </Menu>

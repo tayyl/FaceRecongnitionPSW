@@ -34,7 +34,6 @@ namespace FaceRecognition.ViewModel
 
      spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
 
-     skalowalnosc
     */
     public class FaceRecognizerVM  : INotifyPropertyChanged
     {
@@ -117,6 +116,30 @@ namespace FaceRecognition.ViewModel
         }
         #endregion
         #region Commands
+        ICommand saveRecognizerModel;
+        public ICommand SaveRecognizerModel
+        {
+            get
+            {
+                return saveRecognizerModel;
+            }
+        }
+        ICommand loadRecognizerModel;
+        public ICommand LoadRecognizerModel
+        {
+            get
+            {
+                return loadRecognizerModel;
+            }
+        }
+        ICommand trainLoadedXML;
+        public ICommand TrainLoadedXML
+        {
+            get
+            {
+                return trainLoadedXML;
+            }
+        }
         ICommand browseFile;
         public ICommand BrowseFile
         {
@@ -218,7 +241,8 @@ namespace FaceRecognition.ViewModel
                     fileDialog.Filter = "Pliki (*.xml)|*.xml";
                     if(fileDialog.ShowDialog()== true)
                     {
-                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                        faceRecognizer.IsLoaded=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                        if (faceRecognizer.IsLoaded) faceRecognizer.IsTrained = faceRecognizer.TrainLoadedXML();
                     }
                 }
             };
@@ -232,7 +256,42 @@ namespace FaceRecognition.ViewModel
                     if (fileDialog.ShowDialog() == true)
                     {
                         faceRecognizer.CreateXmlFile(fileDialog.FileName, fileDialog.SafeFileName);
-                        faceRecognizer.IsTrained=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                        faceRecognizer.IsLoaded=faceRecognizer.LoadTrainingData(fileDialog.FileName);
+                        if (faceRecognizer.IsLoaded) faceRecognizer.IsTrained = faceRecognizer.TrainLoadedXML();
+                    }
+                }
+            };
+            trainLoadedXML = new SimpleCommand
+            {
+                CanExecuteDelegate=x=> faceRecognizer.IsLoaded,
+                ExecuteDelegate = x =>
+                {
+                    faceRecognizer.IsTrained = faceRecognizer.TrainLoadedXML();
+                }
+            }; 
+            loadRecognizerModel = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    OpenFileDialog fileDialog = new OpenFileDialog();
+                    fileDialog.Filter = "Pliki (*.yml)|*.yml";
+                    if (fileDialog.ShowDialog() == true)
+                    {
+                        faceRecognizer.LoadRecognizerModel(fileDialog.FileName);
+                    }
+                }
+            };
+            saveRecognizerModel = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    SaveFileDialog fileDialog = new SaveFileDialog();
+                    fileDialog.Filter = "Pliki (*.yml)|*.yml";
+                    if (fileDialog.ShowDialog() == true)
+                    {
+                        faceRecognizer.SaveRecognizerModel(fileDialog.FileName);
                     }
                 }
             };
@@ -245,7 +304,8 @@ namespace FaceRecognition.ViewModel
                         if (faceRecognizer.XmlFilename != null)
                         {
                             faceRecognizer.SaveImage(CroppedFace.ToBitmap(), FaceName);
-                            faceRecognizer.IsTrained = faceRecognizer.LoadTrainingData(faceRecognizer.ImagesSavePath+faceRecognizer.XmlFilename);
+                            faceRecognizer.IsLoaded = faceRecognizer.LoadTrainingData(faceRecognizer.ImagesSavePath+faceRecognizer.XmlFilename);
+                            if (faceRecognizer.IsLoaded) faceRecognizer.IsTrained = faceRecognizer.TrainLoadedXML();
                             if (TabContainer == Tab.File)
                             {
                                 croppedFacesTmp = faceRecognizer.ProcessFrame(fileWithFacesImageTmp.Copy());
