@@ -24,7 +24,9 @@
             </MenuItem>
             <MenuItem Header="_Options"></MenuItem>
         </Menu>
+        <Viewbox Stretch="UniformToFill">
         <Grid>
+            
             <Image x:Name="MainWindowCamera" Source="{Binding MainCamera, Converter={StaticResource ToBitmapBGRSourceConverter}, Mode=OneWay}"  HorizontalAlignment="Left" Height="421" Margin="10,10,0,0" VerticalAlignment="Top" Width="554"/>
             <TabControl HorizontalAlignment="Left" Height="421" VerticalAlignment="Top" Width="294" Margin="578,10,10,10" 
                       attbeh:CommandBehavior.Event="SelectionChanged"                         
@@ -57,5 +59,6 @@
             <Label Content="{Binding LabelUnderCamera}" HorizontalAlignment="Left" Margin="23,425,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.364,3.027" Width="76"/>
 
         </Grid>
+        </Viewbox>
     </DockPanel>
 </Window>
