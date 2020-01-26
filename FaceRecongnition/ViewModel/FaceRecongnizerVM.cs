@@ -140,6 +140,31 @@ namespace FaceRecognition.ViewModel
                 return trainLoadedXML;
             }
         }
+        ICommand loadManyImages;
+        public ICommand LoadManyImages
+        {
+            get
+            {
+                return loadManyImages;
+            }
+        }
+        ICommand loadTestData;
+        public ICommand LoadTestData
+        {
+            get
+            {
+                return loadTestData;
+            }
+        }
+        ICommand loadRunTest;
+        public ICommand LoadRunTest
+        {
+            get
+            {
+                return loadRunTest;
+            }
+        }
+
         ICommand browseFile;
         public ICommand BrowseFile
         {
@@ -208,6 +233,43 @@ namespace FaceRecognition.ViewModel
         public FaceRecognizerVM()
         {
             ComponentDispatcher.ThreadIdle += WebcamProcessing;
+            loadTestData = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    OpenFileDialog file = new OpenFileDialog();
+                    if (file.ShowDialog() == true)
+                    {
+                       // faceRecognizer.LoadImagesFromDirectory(file.FileName,true);
+                    }
+                }
+            }; 
+            loadManyImages = new SimpleCommand
+            {
+                CanExecuteDelegate = x => faceRecognizer.XmlFilename != null,
+                ExecuteDelegate = x =>
+                {
+                    System.Windows.Forms.FolderBrowserDialog file = new System.Windows.Forms.FolderBrowserDialog();
+                    if (file.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        faceRecognizer.LoadImagesFromDirectory(file.SelectedPath);
+                        
+                    }
+                }
+            };
+            loadRunTest = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    OpenFileDialog file = new OpenFileDialog();
+                    if (file.ShowDialog() == true)
+                    {
+                      //  faceRecognizer.RunTest(file.FileName);
+                    }
+                }
+            };
             mainSelectorChangedCommand = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,

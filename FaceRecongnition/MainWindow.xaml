@@ -26,8 +26,12 @@
             </MenuItem>
             <MenuItem Header="_Options">
                 <MenuItem Header="_Train Loaded XML" Command="{Binding TrainLoadedXML}"/>
+                <MenuItem Header="_Load Many Images" Command="{Binding LoadManyImages}"/>
             </MenuItem>
-            <MenuItem Header="_Options"></MenuItem>
+            <MenuItem Header="_Test">
+                <MenuItem Header="_Load Test Data" Command="{Binding LoadTestData}"/>
+                <MenuItem Header="_Load and Run Test" Command="{Binding LoadRunTest}"/>
+            </MenuItem>
         </Menu>
         <Viewbox Stretch="UniformToFill">
         <Grid>

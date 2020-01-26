@@ -46,7 +46,7 @@ namespace FaceRecognition.Model
         public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
         #endregion
         #region Variables 
-      
+        Image<Gray, byte> emptyImage=new Image<Gray,byte>(50,50);
         Image<Gray, byte> grayFrame;
         CascadeClassifier Face;
         XmlDocument xml = new XmlDocument();
@@ -91,8 +91,8 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Height -= (int)(detectedFaces[i].Height * 0.2);
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
                 Image<Gray, byte> tmp = new Image<Gray, byte>(50, 50);
-                tmp = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                tmp._EqualizeHist();
+                tmp = grayFrame.Copy(detectedFaces[i]).Resize(100, 100, Inter.Cubic);
+                tmp._EqualizeHist();               
                 CroppedFaces.Add(tmp);
                 if (IsTrained)
                 {
@@ -110,10 +110,30 @@ namespace FaceRecognition.Model
             });
             if (CroppedFaces.Count == 0)
             {
-                CroppedFaces.Add(new Image<Gray, byte>(50, 50));
+                CroppedFaces.Add(emptyImage);
             }
             CroppedFacesCount = CroppedFaces.Count;
             return CroppedFaces;
+        }
+        Image<Gray, byte> processImage(Image<Bgr,byte> img)
+        {
+            img.Resize(320, 240, Inter.Cubic);
+            Image<Gray, byte> grayImage = img.Convert<Gray, Byte>();
+            System.Drawing.Rectangle[] detectedFaces = Face.DetectMultiScale(grayImage, 1.2, 10, new System.Drawing.Size(50, 50), System.Drawing.Size.Empty);//found parameters for good performance and quality
+
+            grayImage._EqualizeHist();
+            if (detectedFaces.Length == 1)
+            {
+                detectedFaces[0].X += (int)(detectedFaces[0].Height * 0.15);
+                detectedFaces[0].Y += (int)(detectedFaces[0].Width * 0.20);
+                detectedFaces[0].Height -= (int)(detectedFaces[0].Height * 0.2);
+                detectedFaces[0].Width -= (int)(detectedFaces[0].Width * 0.35);
+                return grayImage.Copy(detectedFaces[0]).Resize(100, 100, Inter.Cubic);
+                
+            }
+            else
+                return emptyImage;
+
         }
         public void SaveImage(System.Drawing.Image face_data, string name)
         {
@@ -167,10 +187,10 @@ namespace FaceRecognition.Model
                 using (XmlWriter writer = XmlWriter.Create(FS_Face))
                 {
                     writer.WriteStartDocument();
-                    writer.WriteStartElement("Faces_For_Training");
+                    writer.WriteElementString("Faces_For_Training","");
 
-
-                    writer.WriteEndElement();
+                    
+                    //writer.WriteEndElement();
                     writer.WriteEndDocument();
                 }
                 FS_Face.Close();
@@ -270,6 +290,17 @@ namespace FaceRecognition.Model
 
             }
             return false;
+        }
+        public void LoadImagesFromDirectory(string loadPath)
+        {
+           string[] imagesList = Directory.GetFiles(loadPath);
+            foreach(string imagePath in imagesList)
+            {
+                Image<Bgr, byte> tmp = new Image<Bgr, byte>(imagePath);
+                string[] nameOfFile= imagePath.Split('\\')[imagePath.Split('\\').Count() - 1].Split('_');
+                string clearLabel = nameOfFile[0] + "_" + nameOfFile[1];
+                SaveImage(processImage(tmp).ToBitmap(),clearLabel);
+            }
         }
         public string Recognize(IInputArray inputImage, int eigenThresh = -1)
         {
