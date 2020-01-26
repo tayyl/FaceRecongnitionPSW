@@ -299,8 +299,11 @@ namespace FaceRecognition.Model
                 Image<Bgr, byte> tmp = new Image<Bgr, byte>(imagePath);
                 string[] nameOfFile= imagePath.Split('\\')[imagePath.Split('\\').Count() - 1].Split('_');
                 string clearLabel = nameOfFile[0] + "_" + nameOfFile[1];
+                Image<Gray, byte> detectedFace = processImage(tmp).Copy();
+                if(detectedFace.Height!=50)
                 SaveImage(processImage(tmp).ToBitmap(),clearLabel);
             }
+            IsLoaded = LoadTrainingData(ImagesSavePath+XmlFilename);
         }
         public string Recognize(IInputArray inputImage, int eigenThresh = -1)
         {
