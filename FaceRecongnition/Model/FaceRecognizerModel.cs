@@ -92,7 +92,8 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
                 Image<Gray, byte> tmp = new Image<Gray, byte>(50, 50);
                 tmp = grayFrame.Copy(detectedFaces[i]).Resize(100, 100, Inter.Cubic);
-                tmp._EqualizeHist();               
+
+                tmp._EqualizeHist();
                 CroppedFaces.Add(tmp);
                 if (IsTrained)
                 {
@@ -102,10 +103,9 @@ namespace FaceRecognition.Model
                     //draw label for every face
                     currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
                 }
-                    //  CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
-                    //  CroppedFace._EqualizeHist();
-                    
-                
+                //  CroppedFace = currentFrame.Copy(detectedFaces[i]).Convert<Gray, byte>().Resize(100, 100, Inter.Cubic);
+                //  CroppedFace._EqualizeHist();
+
                 currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             if (CroppedFaces.Count == 0)
@@ -297,13 +297,59 @@ namespace FaceRecognition.Model
             foreach(string imagePath in imagesList)
             {
                 Image<Bgr, byte> tmp = new Image<Bgr, byte>(imagePath);
-                string[] nameOfFile= imagePath.Split('\\')[imagePath.Split('\\').Count() - 1].Split('_');
-                string clearLabel = nameOfFile[0] + "_" + nameOfFile[1];
+
                 Image<Gray, byte> detectedFace = processImage(tmp).Copy();
                 if(detectedFace.Height!=50)
-                SaveImage(processImage(tmp).ToBitmap(),clearLabel);
+                SaveImage(processImage(tmp).ToBitmap(),GetFaceLabel(imagePath));
             }
             IsLoaded = LoadTrainingData(ImagesSavePath+XmlFilename);
+        }
+        string GetFaceLabel(string filePath)
+        {
+            string fileName = filePath.Split('\\')[filePath.Split('\\').Count() - 1];
+            string[] splittedFileName = fileName.Split('_');
+            string label = "";
+            for (int i = 0; i < splittedFileName.Count() - 1; i++)
+            {
+                label += splittedFileName[i];
+                if (i + 1 < splittedFileName.Count() - 1)
+                    label += "_";
+            }
+            return label;
+        }
+        public void RunTestFromTxt(string testPath)
+        {
+            string line;
+            int amount = 0, recognized = 0;
+
+            System.IO.StreamReader file =new System.IO.StreamReader(testPath);
+            while ((line = file.ReadLine()) != null)
+            {
+                string[] fileAndLabel=line.Split('\t');
+                
+                Image<Gray,byte> testImageprocessed = processImage( new Image<Bgr, byte>(fileAndLabel[0]));
+                testImageprocessed._EqualizeHist();
+                if (testImageprocessed.Height != 50)
+                {
+                    string recognizedFace = Recognize(testImageprocessed);
+                    if (recognizedFace == fileAndLabel[1])
+                        recognized++;
+                }
+                amount++;
+            }
+
+            file.Close();
+        }
+        public void CreateTest(string filesPath)
+        {
+            string[] imagesList = Directory.GetFiles(filesPath);
+            string testFileContent = "";
+            foreach (string imagePath in imagesList)
+            {
+                testFileContent += imagePath + "\t" + GetFaceLabel(imagePath) + "\n";    
+            }
+            string destinationPath = filesPath + "\\TestFile_" + DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss")+".txt";
+            System.IO.File.WriteAllText(destinationPath, testFileContent);
         }
         public string Recognize(IInputArray inputImage, int eigenThresh = -1)
         {

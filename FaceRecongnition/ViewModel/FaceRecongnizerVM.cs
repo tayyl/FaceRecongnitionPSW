@@ -148,20 +148,20 @@ namespace FaceRecognition.ViewModel
                 return loadManyImages;
             }
         }
-        ICommand loadTestData;
-        public ICommand LoadTestData
+        ICommand runTestTxt;
+        public ICommand RunTestTxt
         {
             get
             {
-                return loadTestData;
+                return runTestTxt;
             }
         }
-        ICommand loadRunTest;
-        public ICommand LoadRunTest
+        ICommand createTest;
+        public ICommand CreateTest
         {
             get
             {
-                return loadRunTest;
+                return createTest;
             }
         }
 
@@ -233,18 +233,7 @@ namespace FaceRecognition.ViewModel
         public FaceRecognizerVM()
         {
             ComponentDispatcher.ThreadIdle += WebcamProcessing;
-            loadTestData = new SimpleCommand
-            {
-                CanExecuteDelegate = x => true,
-                ExecuteDelegate = x =>
-                {
-                    OpenFileDialog file = new OpenFileDialog();
-                    if (file.ShowDialog() == true)
-                    {
-                       // faceRecognizer.LoadImagesFromDirectory(file.FileName,true);
-                    }
-                }
-            }; 
+           
             loadManyImages = new SimpleCommand
             {
                 CanExecuteDelegate = x => faceRecognizer.XmlFilename != null,
@@ -258,15 +247,29 @@ namespace FaceRecognition.ViewModel
                     }
                 }
             };
-            loadRunTest = new SimpleCommand
+            runTestTxt = new SimpleCommand
+            {
+                CanExecuteDelegate = x => faceRecognizer.IsTrained,
+                ExecuteDelegate = x =>
+                {
+                    OpenFileDialog file = new OpenFileDialog();
+                    file.Filter = "Pliki (*.txt)|*.txt";
+                    if (file.ShowDialog() == true)
+                    {
+                        faceRecognizer.RunTestFromTxt(file.FileName);
+                    }
+                }
+            };
+            createTest = new SimpleCommand
             {
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x =>
                 {
-                    OpenFileDialog file = new OpenFileDialog();
-                    if (file.ShowDialog() == true)
+                    System.Windows.Forms.FolderBrowserDialog file = new System.Windows.Forms.FolderBrowserDialog();
+                    if (file.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
-                      //  faceRecognizer.RunTest(file.FileName);
+                        faceRecognizer.CreateTest(file.SelectedPath);
+
                     }
                 }
             };
