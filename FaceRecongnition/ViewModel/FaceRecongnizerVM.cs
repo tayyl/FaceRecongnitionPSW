@@ -25,12 +25,7 @@ using Microsoft.Win32;
 namespace FaceRecognition.ViewModel
 {
     /*
-     Przygotować dane testowe
-     określić wydajność i efektywność     
-     miary wydajności 
-     ilość klatek na sekundę
-
-    czyli przygotować test
+     sprawdzić czy zdjęcie jest niedoświetlone/prześwietlone
 
      spróbować uzyc pozostalych dwoch recognizerow, aby zwiekszyc celnosc
 

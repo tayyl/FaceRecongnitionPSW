@@ -54,7 +54,9 @@ namespace FaceRecognition.Model
         List<int> namesIdList = new List<int>();
         List<Mat> trainingImages = new List<Mat>();
         string recognizerType = "EMGU.CV.EigenFaceRecognizer";
-        FaceRecognizer recognizer=new EigenFaceRecognizer(80, double.PositiveInfinity);
+        FaceRecognizer recognizerEigen=null;
+        FaceRecognizer recognizerFisher=null;
+        FaceRecognizer recognizerLBPH=null;
         string personLabel;
         int eigenThreshold = 3000;
         float eigenDistance = 0;
@@ -97,7 +99,7 @@ namespace FaceRecognition.Model
                 CroppedFaces.Add(tmp);
                 if (IsTrained)
                 {
-                    string name = Recognize(tmp);
+                    string name = Recognize(tmp)[2];
                     int matchValue = (int)eigenDistance;
 
                     //draw label for every face
@@ -257,14 +259,15 @@ namespace FaceRecognition.Model
         {
             if (File.Exists(loadPath))
             {
-                recognizer.Read(loadPath);
+                if (recognizerEigen == null) recognizerEigen = new EigenFaceRecognizer(threshold:3000);
+                recognizerEigen.Read(loadPath);
                 return true;
             }
             return false;
         }
         public void SaveRecognizerModel(string savePath)
         {
-            recognizer.Write(savePath);
+            recognizerEigen.Write(savePath);
 
         }
         public bool TrainLoadedXML()
@@ -272,20 +275,16 @@ namespace FaceRecognition.Model
 
             if (trainingImages.ToArray().Length != 0)
             {
-                switch (recognizerType)
-                {
-                    case ("EMGU.CV.LBPHFaceRecognizer"):
-                        recognizer = new LBPHFaceRecognizer(1, 8, 8, 8, 100);
-                        break;
-                    case ("EMGU.CV.FisherFaceRecognizer"):
-                        recognizer = new FisherFaceRecognizer(0, 3500);
-                        break;
-                    case ("EMGU.CV.EigenFaceRecognizer"):
-                    default:
-                        recognizer = new EigenFaceRecognizer(80, double.PositiveInfinity);
-                        break;
-                }
-                recognizer.Train(trainingImages.ToArray(), namesIdList.ToArray());
+                
+                recognizerLBPH = new LBPHFaceRecognizer(1, 8, 8, 8, 400);
+                  
+                recognizerFisher = new FisherFaceRecognizer(trainingImages.Count(), 3000);
+         
+                recognizerEigen = new EigenFaceRecognizer(trainingImages.Count(), double.PositiveInfinity);
+                  
+                recognizerEigen.Train(trainingImages.ToArray(), namesIdList.ToArray());
+                recognizerFisher.Train(trainingImages.ToArray(), namesIdList.ToArray());
+                recognizerLBPH.Train(trainingImages.ToArray(), namesIdList.ToArray());
                 return true;
 
             }
@@ -331,7 +330,7 @@ namespace FaceRecognition.Model
                 testImageprocessed._EqualizeHist();
                 if (testImageprocessed.Height != 50)
                 {
-                    string recognizedFace = Recognize(testImageprocessed);
+                    string recognizedFace = Recognize(testImageprocessed)[2];
                     if (recognizedFace == fileAndLabel[1])
                         recognized++;
                 }
@@ -351,31 +350,29 @@ namespace FaceRecognition.Model
             string destinationPath = filesPath + "\\TestFile_" + DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss")+".txt";
             System.IO.File.WriteAllText(destinationPath, testFileContent);
         }
-        public string Recognize(IInputArray inputImage, int eigenThresh = -1)
+        public string[] Recognize(IInputArray inputImage, int eigenThresh = -1)
         {
-            FaceRecognizer.PredictionResult predictionResult = recognizer.Predict(inputImage);
-
-            if(predictionResult.Label== -1)
+            FaceRecognizer.PredictionResult[] predictions = new FaceRecognizer.PredictionResult[3];
+            predictions[0]= recognizerEigen.Predict(inputImage);
+            predictions[1]= recognizerFisher.Predict(inputImage);
+            predictions[2]= recognizerLBPH.Predict(inputImage);
+            string[] labels=new string[3];
+            for(int i=0; i<3; i++)
             {
-                personLabel = "Unknown";
-                eigenDistance = 0;
-                return personLabel;
-            }
-            else
-            {
-                personLabel = namesList[predictionResult.Label];
-                eigenDistance = (float)predictionResult.Distance;
-                if (eigenThresh > -1) eigenThreshold = eigenThresh;
-
-                
-                if (recognizerType== "EMGU.CV.EigenFaceRecognizer")
-                    if (eigenDistance > eigenThreshold) return personLabel;
-                    else return "Unknown";
+                if (predictions[i].Label == -1)
+                {
+                    labels[i]=personLabel;
+                }
                 else
-                    return personLabel; // only eigenRecognizer uses eigendistance and threshold
-                
+                {
+                    labels[i]= namesList[predictions[i].Label];
+                    
+
+                }
 
             }
+
+            return labels;
         }
     }
 }
