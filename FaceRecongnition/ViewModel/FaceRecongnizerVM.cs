@@ -109,8 +109,71 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(CameraButtonText));
             }
         }
+        bool eigenRecognizerChecked;
+        public bool EigenRecognizerChecked
+        {
+            get
+            {
+                return eigenRecognizerChecked;
+            }
+            set
+            {
+                eigenRecognizerChecked = value;
+                NotifyPropertyChanged(nameof(EigenRecognizerChecked));
+            }
+        }
+        bool fisherRecognizerChecked;
+        public bool FisherRecognizerChecked
+        {
+            get
+            {
+                return fisherRecognizerChecked;
+            }
+            set
+            {
+                fisherRecognizerChecked = value;
+                NotifyPropertyChanged(nameof(FisherRecognizerChecked));
+            }
+        }
+        bool lbphRecognizerChecked;
+        public bool LBPHRecognizerChecked
+        {
+            get
+            {
+                return lbphRecognizerChecked;
+            }
+            set
+            {
+                lbphRecognizerChecked = value;
+                NotifyPropertyChanged(nameof(LBPHRecognizerChecked));
+            }
+        }
         #endregion
         #region Commands
+        ICommand eigenRecognizer;
+        public ICommand EigenRecognizer
+        {
+            get
+            {
+                return eigenRecognizer;
+            }
+        }
+        ICommand fisherRecognizer;
+        public ICommand FisherRecognizer
+        {
+            get
+            {
+                return fisherRecognizer;
+            }
+        }
+        ICommand lbphRecognizer;
+        public ICommand LBPHRecognizer
+        {
+            get
+            {
+                return lbphRecognizer;
+            }
+        }
         ICommand saveRecognizerModel;
         public ICommand SaveRecognizerModel
         {
@@ -228,7 +291,40 @@ namespace FaceRecognition.ViewModel
         public FaceRecognizerVM()
         {
             ComponentDispatcher.ThreadIdle += WebcamProcessing;
-           
+            LBPHRecognizerChecked = true;
+            EigenRecognizerChecked = false;
+            FisherRecognizerChecked = false;
+
+            eigenRecognizer = new SimpleCommand
+            {
+                CanExecuteDelegate = x => !EigenRecognizerChecked,
+                ExecuteDelegate = x => { 
+                    faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.Eigen); 
+                    EigenRecognizerChecked = true; 
+                    FisherRecognizerChecked = false; 
+                    LBPHRecognizerChecked = false; 
+                }
+            };
+            fisherRecognizer = new SimpleCommand
+            {
+                CanExecuteDelegate = x => !FisherRecognizerChecked,
+                ExecuteDelegate = x => {
+                    faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.Fisher);
+                    EigenRecognizerChecked = false;
+                    FisherRecognizerChecked = true;
+                    LBPHRecognizerChecked = false;
+                }
+            };
+            lbphRecognizer = new SimpleCommand
+            {
+                CanExecuteDelegate = x => !LBPHRecognizerChecked,
+                ExecuteDelegate = x => {
+                    faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.LBPH);
+                    EigenRecognizerChecked = false;
+                    FisherRecognizerChecked = false;
+                    LBPHRecognizerChecked = true;
+                }
+            };
             loadManyImages = new SimpleCommand
             {
                 CanExecuteDelegate = x => faceRecognizer.XmlFilename != null,

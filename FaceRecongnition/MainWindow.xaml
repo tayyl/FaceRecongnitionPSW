@@ -25,6 +25,11 @@
                 <MenuItem Header="_Load Recognizer Model" Command="{Binding LoadRecognizerModel}" />
             </MenuItem>
             <MenuItem Header="_Options">
+                <MenuItem Header="_Recognizer">
+                    <MenuItem Header="_EigenFaces" Command="{Binding EigenRecognizer}" IsChecked="{Binding EigenRecognizerChecked}"/>
+                    <MenuItem Header="_FisherFaces" Command="{Binding FisherRecognizer}" IsChecked="{Binding FisherRecognizerChecked}"/>
+                    <MenuItem Header="_LBPHFaces" Command="{Binding LBPHRecognizer}" IsChecked="{Binding LBPHRecognizerChecked}"/>
+                </MenuItem>
                 <MenuItem Header="_Train Loaded XML" Command="{Binding TrainLoadedXML}"/>
                 <MenuItem Header="_Load Many Images" Command="{Binding LoadManyImages}"/>
             </MenuItem>
