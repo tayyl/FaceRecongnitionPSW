@@ -148,6 +148,19 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(LBPHRecognizerChecked));
             }
         }
+        bool useAllRecognizersChecked;
+        public bool UseAllRecognizersChecked
+        {
+            get
+            {
+                return useAllRecognizersChecked;
+            }
+            set
+            {
+                useAllRecognizersChecked = value;
+                NotifyPropertyChanged(nameof(UseAllRecognizersChecked));
+            }
+        }
         #endregion
         #region Commands
         ICommand eigenRecognizer;
@@ -172,6 +185,14 @@ namespace FaceRecognition.ViewModel
             get
             {
                 return lbphRecognizer;
+            }
+        }
+        ICommand useAllRecognizersTest;
+        public ICommand UseAllRecognizersTest
+        {
+            get
+            {
+                return useAllRecognizersTest;
             }
         }
         ICommand saveRecognizerModel;
@@ -324,6 +345,23 @@ namespace FaceRecognition.ViewModel
                     FisherRecognizerChecked = false;
                     LBPHRecognizerChecked = true;
                 }
+            };
+            useAllRecognizersTest = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    if (UseAllRecognizersChecked)
+                    {
+                        faceRecognizer.UseAllRecognizersTest = false;
+                        UseAllRecognizersChecked = false;
+                    }
+                    else
+                    {
+                        faceRecognizer.UseAllRecognizersTest = true;
+                        UseAllRecognizersChecked = true;
+                    }
+                 }
             };
             loadManyImages = new SimpleCommand
             {

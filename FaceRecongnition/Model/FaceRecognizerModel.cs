@@ -28,23 +28,21 @@ using System.Drawing.Imaging;
 using System.Xml;
 namespace FaceRecognition.Model
 {
-    public class FaceRecognizerModel 
+    public class FaceRecognizerModel
     {
-        #region Attributes
         public enum RecognizerType { Eigen = 0, Fisher = 1, LBPH = 2 };
-        public int CroppedFacesCount { get; set; } = 0;
+        #region Attributes
+        public RecognizerType CurrentRecognizer = RecognizerType.LBPH;
+        public int CroppedFacesCount { get; private set; } = 0;
+        public bool UseAllRecognizersTest { get; set; } = false;
+        public bool EqualizeHistogramTest { get; set; } = false;
+        public bool EqualizeHistogram { get; set; } = false;
         public bool IsLoaded { get; set; } = false;
         public bool IsTrained{ get; set; } = false;
-        public string XmlFilename { get; set; } = null;
-        public string ImagesSavePath { get; set; } = null;
-        Image<Bgr, byte> currentFrame;
-        public Image<Bgr, byte> CurrentFrame {
-            get
-            {
-                return currentFrame;
-            }
-        }
-        public Image<Gray, byte> CroppedFace { get; set; } = new Image<Gray, byte>(50, 50);
+        public string XmlFilename { get; private set; } = null;
+        public string ImagesSavePath { get; private set; } = null;
+        public Image<Bgr, byte> CurrentFrame { get; private set; }
+        public Image<Gray, byte> CroppedFace { get; private set; } = new Image<Gray, byte>(50, 50);
         #endregion
         #region Variables         
         Image<Gray, byte> emptyImage=new Image<Gray,byte>(50,50);
@@ -55,9 +53,6 @@ namespace FaceRecognition.Model
         List<int> namesIdList = new List<int>();
         List<Mat> trainingImages = new List<Mat>();
         FaceRecognizer recognizer = null;
-        string personLabel;
-        int eigenThreshold = 3000;
-        float eigenDistance = 0;
         #endregion
         public FaceRecognizerModel(string cascadeCalssifierPath)
         {
@@ -74,6 +69,7 @@ namespace FaceRecognition.Model
         }
         public void ChangeRecognizer(RecognizerType type)
         {
+            CurrentRecognizer = type;
             switch (type)
             {
                 case RecognizerType.Eigen:
@@ -90,10 +86,10 @@ namespace FaceRecognition.Model
         public List<Image<Gray,byte>> ProcessFrame(Image<Bgr, byte> videoCapture)
         {
             List<Image<Gray, byte>> CroppedFaces = new List<Image<Gray, byte>>(); 
-            currentFrame = videoCapture;
-            currentFrame.Resize(320, 240, Inter.Cubic); //resizing so can work with smaller picture for better performance
+            CurrentFrame = videoCapture;
+            CurrentFrame.Resize(320, 240, Inter.Cubic); //resizing so can work with smaller picture for better performance
 
-            grayFrame = currentFrame.Convert<Gray, Byte>();
+            grayFrame = CurrentFrame.Convert<Gray, Byte>();
             System.Drawing.Rectangle[] detectedFaces = Face.DetectMultiScale(grayFrame, 1.2, 10, new System.Drawing.Size(50, 50), System.Drawing.Size.Empty);//found parameters for good performance and quality
             //parallel.For = better performance; processing every face in thread
             Parallel.For(0, detectedFaces.Length, i =>
@@ -110,14 +106,12 @@ namespace FaceRecognition.Model
                 CroppedFaces.Add(tmp);
                 if (IsTrained)
                 {
-                    string name = Recognize(tmp);
-                    int matchValue = (int)eigenDistance;
-
+                    string name = Recognize(tmp,recognizer);
                     //draw label for every face
-                    currentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
+                    CurrentFrame.Draw(name, new System.Drawing.Point(detectedFaces[i].X - 2, detectedFaces[i].Y - 2), FontFace.HersheyComplex, 1, new Bgr(0, 255, 0));
                 }
 
-                currentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
+                CurrentFrame.Draw(detectedFaces[i], new Bgr(0, 0, 255), 2);
             });
             if (CroppedFaces.Count == 0)
             {
@@ -328,34 +322,87 @@ namespace FaceRecognition.Model
             }
             return label;
         }
-        public void RunTestFromTxt(string testPath)
+        public string RunTestFromTxt(string testPath)
         {
+            System.IO.StreamReader file = new System.IO.StreamReader(testPath);
             string line;
-            int amount = 0;
-            int recognized=0;
-
-            System.IO.StreamReader file =new System.IO.StreamReader(testPath);
-            while ((line = file.ReadLine()) != null)
+            int amountDetectedFaces = 0, allPictures=0;
+            int[] recognizedAll= { 0, 0, 0 };
+            FaceRecognizer[] testRecognizers = { null, null, null };
+            testRecognizers[(int)CurrentRecognizer] = recognizer;
+            string outputRaport = "";
+            if (UseAllRecognizersTest)
             {
-                string[] fileAndLabel=line.Split('\t');
-                
-                Image<Gray,byte> testImageprocessed = processImage( new Image<Gray, byte>(fileAndLabel[0]));
-                if (testImageprocessed != null)
+                for(int i=0; i<3; i++)
                 {
-                    testImageprocessed._EqualizeHist();
-                    if (testImageprocessed.Height != 50)
+                    if(testRecognizers[i] == null)
                     {
-                            string recognizedFace = Recognize(testImageprocessed);
-                            if (recognizedFace == fileAndLabel[1])
-                                recognized++;
-                        
+                        switch (i)
+                        {
+                            case (int)RecognizerType.Eigen:
+                                testRecognizers[i] = new EigenFaceRecognizer(trainingImages.Count, double.MaxValue);
+                                break;
+                            case (int)RecognizerType.Fisher:
+                                testRecognizers[i] = new FisherFaceRecognizer(trainingImages.Count, double.MaxValue);
+                                break;
+                            case (int)RecognizerType.LBPH:
+                                testRecognizers[i] = new FisherFaceRecognizer(trainingImages.Count, double.MaxValue);
+                                break;
+                        }
+                        testRecognizers[i].Train(trainingImages.ToArray(), namesIdList.ToArray());
                     }
-                    amount++;
-                    testImageprocessed.Dispose();
                 }
             }
 
+            while ((line = file.ReadLine()) != null)
+            {
+                string[] fileAndLabel=line.Split('\t');
+                string recognizedFace;
+
+                Image<Gray,byte> testImageprocessed = processImage( new Image<Gray, byte>(fileAndLabel[0]));
+
+                if (testImageprocessed != null)
+                {
+                    if(EqualizeHistogramTest)
+                        testImageprocessed._EqualizeHist();
+                   
+                    for(int i=0; i<3; i++)
+                     {
+                        if (testRecognizers[i] != null) {
+                            recognizedFace = Recognize(testImageprocessed, testRecognizers[i]);
+                            if(recognizedFace == fileAndLabel[1])
+                                 recognizedAll[i]++;
+                        }
+                    }           
+                    amountDetectedFaces++;                    
+                    
+                    testImageprocessed.Dispose();
+                }
+                allPictures++;
+            }
+
             file.Close();
+            outputRaport +="Tested DataSet: "+ XmlFilename;
+            outputRaport += "\nTesting pictures: " + allPictures.ToString();
+            outputRaport += "\nPictures with detected faces: " + amountDetectedFaces.ToString();
+            outputRaport += "\n\nRecognized faces for: ";
+            for(int i=0; i<3; i++)
+            {
+                switch (i)
+                {
+                    case (int)RecognizerType.Eigen:
+                        outputRaport += "\nEigenFaces: ";
+                        break;
+                    case (int)RecognizerType.Fisher:
+                        outputRaport += "\nFisherFaces: ";
+                        break;
+                    case (int)RecognizerType.LBPH:
+                        outputRaport += "\nEigenFaces: ";
+                        break;
+                }
+                outputRaport += recognizedAll[i] + ", accuracy: " + ((double)recognizedAll[i] / amountDetectedFaces * 100).ToString("0.##") + "%";
+            }
+            return outputRaport;
         }
         public void CreateTest(string filesPath)
         {
@@ -368,15 +415,15 @@ namespace FaceRecognition.Model
             string destinationPath = filesPath + "\\TestFile_" + DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss")+".txt";
             System.IO.File.WriteAllText(destinationPath, testFileContent);
         }
-        public string Recognize(IInputArray inputImage, int eigenThresh = -1)
+        public string Recognize(IInputArray inputImage, FaceRecognizer r)
         {
-            FaceRecognizer.PredictionResult prediction = recognizer.Predict(inputImage);
+            FaceRecognizer.PredictionResult prediction = r.Predict(inputImage);
 
             string label;
           
                 if (prediction.Label == -1)
                 {
-                    label=personLabel;
+                    label="Unknown";
                 }
                 else
                 {

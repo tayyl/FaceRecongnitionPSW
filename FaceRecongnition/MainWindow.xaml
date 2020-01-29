@@ -34,8 +34,9 @@
                 <MenuItem Header="_Load Many Images" Command="{Binding LoadManyImages}"/>
             </MenuItem>
             <MenuItem Header="_Test">
-                <MenuItem Header="_Run Test" Command="{Binding RunTestTxt}"/>
+                <MenuItem Header="_Use all recognizers" Command="{Binding UseAllRecognizersTest}" IsChecked="{Binding UseAllRecognizersChecked}"/>
                 <MenuItem Header="_Create Test" Command="{Binding CreateTest}"/>
+                <MenuItem Header="_Run Test" Command="{Binding RunTestTxt}"/>
             </MenuItem>
         </Menu>
         <Viewbox Stretch="UniformToFill">
