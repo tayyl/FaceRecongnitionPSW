@@ -109,6 +109,45 @@ namespace FaceRecognition.ViewModel
                 NotifyPropertyChanged(nameof(CameraButtonText));
             }
         }
+        bool equalizeHistogramTestChecked;
+        public bool EqualizeHistogramTestChecked
+        {
+            get
+            {
+                return equalizeHistogramTestChecked;
+            }
+            set
+            {
+                equalizeHistogramTestChecked = value;
+                NotifyPropertyChanged(nameof(EqualizeHistogramTestChecked));
+            }
+        }
+        bool equalizeHistogramChecked;
+        public bool EqualizeHistogramChecked
+        {
+            get
+            {
+                return equalizeHistogramChecked;
+            }
+            set
+            {
+                equalizeHistogramChecked = value;
+                NotifyPropertyChanged(nameof(EqualizeHistogramChecked));
+            }
+        }
+        bool saveRaportToFileChecked;
+        public bool SaveRaportToFileChecked
+        {
+            get
+            {
+                return saveRaportToFileChecked;
+            }
+            set
+            {
+                saveRaportToFileChecked = value;
+                NotifyPropertyChanged(nameof(SaveRaportToFileChecked));
+            }
+        }
         bool eigenRecognizerChecked;
         public bool EigenRecognizerChecked
         {
@@ -163,6 +202,22 @@ namespace FaceRecognition.ViewModel
         }
         #endregion
         #region Commands
+        ICommand equalizeHistogram;
+        public ICommand EqualizeHistogram
+        {
+            get
+            {
+                return equalizeHistogram;
+            }
+        }
+        ICommand equalizeHistogramTest;
+        public ICommand EqualizeHistogramTest
+        {
+            get
+            {
+                return equalizeHistogramTest;
+            }
+        }
         ICommand eigenRecognizer;
         public ICommand EigenRecognizer
         {
@@ -193,6 +248,14 @@ namespace FaceRecognition.ViewModel
             get
             {
                 return useAllRecognizersTest;
+            }
+        }
+        ICommand saveRaportToFile;
+        public ICommand SaveRaportToFile
+        {
+            get
+            {
+                return saveRaportToFile;
             }
         }
         ICommand saveRecognizerModel;
@@ -315,6 +378,34 @@ namespace FaceRecognition.ViewModel
             LBPHRecognizerChecked = true;
             EigenRecognizerChecked = false;
             FisherRecognizerChecked = false;
+            SaveRaportToFileChecked = false;
+            EqualizeHistogramChecked = faceRecognizer.EqualizeHistogram;
+            EqualizeHistogramTestChecked = faceRecognizer.EqualizeHistogramTest;
+
+            equalizeHistogram = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    faceRecognizer.EqualizeHistogram = EqualizeHistogramChecked = !EqualizeHistogramChecked;                     
+                }
+            };
+            equalizeHistogramTest= new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    faceRecognizer.EqualizeHistogramTest = EqualizeHistogramTestChecked = !EqualizeHistogramTestChecked;
+                }
+            };
+            saveRaportToFile = new SimpleCommand
+            {
+                CanExecuteDelegate = x => true,
+                ExecuteDelegate = x =>
+                {
+                    SaveRaportToFileChecked = !SaveRaportToFileChecked;
+                }
+            };
 
             eigenRecognizer = new SimpleCommand
             {
@@ -322,8 +413,8 @@ namespace FaceRecognition.ViewModel
                 ExecuteDelegate = x => { 
                     faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.Eigen); 
                     EigenRecognizerChecked = true; 
-                    FisherRecognizerChecked = false; 
-                    LBPHRecognizerChecked = false; 
+                    FisherRecognizerChecked = LBPHRecognizerChecked = false; 
+                     
                 }
             };
             fisherRecognizer = new SimpleCommand
@@ -331,9 +422,9 @@ namespace FaceRecognition.ViewModel
                 CanExecuteDelegate = x => !FisherRecognizerChecked,
                 ExecuteDelegate = x => {
                     faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.Fisher);
-                    EigenRecognizerChecked = false;
+                    EigenRecognizerChecked = LBPHRecognizerChecked = false;
                     FisherRecognizerChecked = true;
-                    LBPHRecognizerChecked = false;
+                  
                 }
             };
             lbphRecognizer = new SimpleCommand
@@ -341,8 +432,8 @@ namespace FaceRecognition.ViewModel
                 CanExecuteDelegate = x => !LBPHRecognizerChecked,
                 ExecuteDelegate = x => {
                     faceRecognizer.ChangeRecognizer(FaceRecognizerModel.RecognizerType.LBPH);
-                    EigenRecognizerChecked = false;
-                    FisherRecognizerChecked = false;
+                    EigenRecognizerChecked = FisherRecognizerChecked = false;
+                  
                     LBPHRecognizerChecked = true;
                 }
             };
@@ -351,16 +442,8 @@ namespace FaceRecognition.ViewModel
                 CanExecuteDelegate = x => true,
                 ExecuteDelegate = x =>
                 {
-                    if (UseAllRecognizersChecked)
-                    {
-                        faceRecognizer.UseAllRecognizersTest = false;
-                        UseAllRecognizersChecked = false;
-                    }
-                    else
-                    {
-                        faceRecognizer.UseAllRecognizersTest = true;
-                        UseAllRecognizersChecked = true;
-                    }
+                    faceRecognizer.UseAllRecognizersTest = UseAllRecognizersChecked = !UseAllRecognizersChecked;
+                 
                  }
             };
             loadManyImages = new SimpleCommand
@@ -381,11 +464,22 @@ namespace FaceRecognition.ViewModel
                 CanExecuteDelegate = x => faceRecognizer.IsTrained,
                 ExecuteDelegate = x =>
                 {
+                    string raport="";
                     OpenFileDialog file = new OpenFileDialog();
                     file.Filter = "Pliki (*.txt)|*.txt";
                     if (file.ShowDialog() == true)
                     {
-                        faceRecognizer.RunTestFromTxt(file.FileName);
+                        raport=faceRecognizer.RunTestFromTxt(file.FileName);
+                        MessageBox.Show(raport);
+                    }
+                    if (SaveRaportToFileChecked)
+                    {
+                        SaveFileDialog saveRaport = new SaveFileDialog();
+                        saveRaport.Filter = "Pliki (*.txt)|*.txt";
+                        if(saveRaport.ShowDialog() == true)
+                        {
+                            System.IO.File.WriteAllText(saveRaport.FileName, raport);
+                        }
                     }
                 }
             };

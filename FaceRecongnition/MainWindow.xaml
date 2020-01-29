@@ -30,11 +30,16 @@
                     <MenuItem Header="_FisherFaces" Command="{Binding FisherRecognizer}" IsChecked="{Binding FisherRecognizerChecked}"/>
                     <MenuItem Header="_LBPHFaces" Command="{Binding LBPHRecognizer}" IsChecked="{Binding LBPHRecognizerChecked}"/>
                 </MenuItem>
+                <MenuItem Header="_Equalize Histogram" Command="{Binding EqualizeHistogram}" IsChecked="{Binding EqualizeHistogramChecked}"/>
                 <MenuItem Header="_Train Loaded XML" Command="{Binding TrainLoadedXML}"/>
                 <MenuItem Header="_Load Many Images" Command="{Binding LoadManyImages}"/>
             </MenuItem>
             <MenuItem Header="_Test">
-                <MenuItem Header="_Use all recognizers" Command="{Binding UseAllRecognizersTest}" IsChecked="{Binding UseAllRecognizersChecked}"/>
+                <MenuItem Header="_Options">
+                    <MenuItem Header="_Use all recognizers" Command="{Binding UseAllRecognizersTest}" IsChecked="{Binding UseAllRecognizersChecked}"/>
+                    <MenuItem Header="_Equalize Histogram" Command="{Binding EqualizeHistogramTest}" IsChecked="{Binding EqualizeHistogramTestChecked}"/>
+                    <MenuItem Header="_Save raport to file" Command="{Binding SaveRaportToFile}" IsChecked="{Binding SaveRaportToFileChecked}"/>
+                </MenuItem>
                 <MenuItem Header="_Create Test" Command="{Binding CreateTest}"/>
                 <MenuItem Header="_Run Test" Command="{Binding RunTestTxt}"/>
             </MenuItem>

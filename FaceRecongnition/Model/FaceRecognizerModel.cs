@@ -101,7 +101,7 @@ namespace FaceRecognition.Model
                     detectedFaces[i].Width -= (int)(detectedFaces[i].Width * 0.35);
                 Image<Gray, byte> tmp = new Image<Gray, byte>(50, 50);
                 tmp = grayFrame.Copy(detectedFaces[i]).Resize(100, 100, Inter.Cubic);
-
+                if(EqualizeHistogram)
                 tmp._EqualizeHist();
                 CroppedFaces.Add(tmp);
                 if (IsTrained)
@@ -124,8 +124,8 @@ namespace FaceRecognition.Model
         {
             img.Resize(320, 240, Inter.Cubic);
             System.Drawing.Rectangle[] detectedFaces = Face.DetectMultiScale(img, 1.2, 10, new System.Drawing.Size(50, 50), System.Drawing.Size.Empty);//found parameters for good performance and quality
-
-          //  img._EqualizeHist();
+            if(EqualizeHistogram)
+            img._EqualizeHist();
             if (detectedFaces.Length == 1)
             {
                 detectedFaces[0].X += (int)(detectedFaces[0].Height * 0.15);
@@ -383,6 +383,7 @@ namespace FaceRecognition.Model
 
             file.Close();
             outputRaport +="Tested DataSet: "+ XmlFilename;
+            outputRaport += "\nEqualizing histograms of testing pictures: " + EqualizeHistogramTest.ToString();
             outputRaport += "\nTesting pictures: " + allPictures.ToString();
             outputRaport += "\nPictures with detected faces: " + amountDetectedFaces.ToString();
             outputRaport += "\n\nRecognized faces for: ";
@@ -397,7 +398,7 @@ namespace FaceRecognition.Model
                         outputRaport += "\nFisherFaces: ";
                         break;
                     case (int)RecognizerType.LBPH:
-                        outputRaport += "\nEigenFaces: ";
+                        outputRaport += "\nLBPHFaces: ";
                         break;
                 }
                 outputRaport += recognizedAll[i] + ", accuracy: " + ((double)recognizedAll[i] / amountDetectedFaces * 100).ToString("0.##") + "%";
