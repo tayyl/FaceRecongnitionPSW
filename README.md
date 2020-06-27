@@ -1,2 +1,2 @@
 # FaceRecongnitionPSW
-My project on face recongnition using EmguCV 
+My project about face recongnition using EmguCV and popular face recognition algorithms 
